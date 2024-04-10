@@ -1,0 +1,12 @@
+{
+  "buildBeforeRunning" : true,
+  "extension" : {
+    "identifier" : "info.varisco.LaTeX",
+    "name" : "LaTeX"
+  },
+  "extensionTemplate" : "novalatex",
+  "extensionValues" : {
+    "novalatex.mainfile" : "main.tex",
+    "novalatex.option-latexmk" : "-xelatex"
+  }
+}

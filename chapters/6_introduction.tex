@@ -1,0 +1,15 @@
+\chapter{Introduction}
+\label{chap:intro}
+
+In today's world, hyperscale cloud providers, such as Microsoft Azure and Amazon Web Services, are used extensively. These companies provide serverless functions, which run for short bursts and close immediately afterwards. In order to do this efficiently, the sandbox in which the code is executed should be able to quickly spin up, so the cold start problem can be minimized. Existing services like Docker and K8S are mostly used for this, but are not ideal: while being more performant than full blown operating systems, there cold boot is still problematic. A new standard, the WebAssembly System Interface (WASI), has been created which should greatly mitigate this problem.
+
+\acrfull{Wasm} originally started as a way for browsers to execute code written in a language other than Javascript. It allows code from any supported programming language to be compiled to machine instructions for a virtual CPU, and for these instructions to be efficiently executed in the browser sandbox. This has proven to be successful and has opened numerous possibilities for web apps that weren't possible before. A great example of this is the new Google Earth website, which uses WebAssembly underneath, which allows for performant rendering of the Earth.
+
+This model of running code on a lightweight virtual CPU seen interest outside of the browser, mainly for servers, low power devices (IOT), and so on. There, the WebAssembly System Interface could replace Docker, and provide performance improvements, power and storage savings.
+
+WASI is currently still in development, and has a long way to go to get stable. One of the problems WASI is currently facing is the lack of APIs available to interface with the system. One of the APIs that is currently missing is the one to interact with USB devices. Having such an API would be useful for servers, cars, IOT devices, etc. The goal of this master's thesis is to create an USB proposal for expanding the WASI, and eventually add support for USB to WASI. With access control, users can decide which devices a program running in WASM can access.
+
+\section{Objectives}
+
+
+
