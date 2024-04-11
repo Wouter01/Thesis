@@ -1,15 +1,40 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-In today's world, hyperscale cloud providers, such as Microsoft Azure and Amazon Web Services, are used extensively. These companies provide serverless functions, which run for short bursts and close immediately afterwards. In order to do this efficiently, the sandbox in which the code is executed should be able to quickly spin up, so the cold start problem can be minimized. Existing services like Docker and K8S are mostly used for this, but are not ideal: while being more performant than full blown operating systems, there cold boot is still problematic. A new standard, the WebAssembly System Interface (WASI), has been created which should greatly mitigate this problem.
+% In today's world, hyperscale cloud providers, such as Microsoft Azure and Amazon Web Services, are used extensively. These companies provide serverless functions, which run for short bursts and close immediately afterwards. In order to do this efficiently, the sandbox in which the code is executed should be able to quickly spin up, so the cold start problem can be minimized. Existing services like Docker and K8S are mostly used for this, but are not ideal: while being more performant than full blown operating systems, there cold boot is still problematic. A new standard, the WebAssembly System Interface (WASI), has been created which should greatly mitigate this problem.
+% 
+% \acrfull{Wasm} originally started as a way for browsers to execute code written in a language other than Javascript. It allows code from any supported programming language to be compiled to machine instructions for a virtual CPU, and for these instructions to be efficiently executed in the browser sandbox. This has proven to be successful and has opened numerous possibilities for web apps that weren't possible before. A great example of this is the new Google Earth website, which uses WebAssembly underneath, which allows for performant rendering of the Earth.
+% 
+% This model of running code on a lightweight virtual CPU seen interest outside of the browser, mainly for servers, low power devices (IOT), and so on. There, the WebAssembly System Interface could replace Docker, and provide performance improvements, power and storage savings.
+% 
+% WASI is currently still in development, and has a long way to go to get stable. One of the problems WASI is currently facing is the lack of APIs available to interface with the system. One of the APIs that is currently missing is the one to interact with USB devices. Having such an API would be useful for servers, cars, IOT devices, etc. The goal of this master's thesis is to create an USB proposal for expanding the WASI, and eventually add support for USB to WASI. With access control, users can decide which devices a program running in WASM can access.
 
-\acrfull{Wasm} originally started as a way for browsers to execute code written in a language other than Javascript. It allows code from any supported programming language to be compiled to machine instructions for a virtual CPU, and for these instructions to be efficiently executed in the browser sandbox. This has proven to be successful and has opened numerous possibilities for web apps that weren't possible before. A great example of this is the new Google Earth website, which uses WebAssembly underneath, which allows for performant rendering of the Earth.
 
-This model of running code on a lightweight virtual CPU seen interest outside of the browser, mainly for servers, low power devices (IOT), and so on. There, the WebAssembly System Interface could replace Docker, and provide performance improvements, power and storage savings.
+% V2 TEKST
 
-WASI is currently still in development, and has a long way to go to get stable. One of the problems WASI is currently facing is the lack of APIs available to interface with the system. One of the APIs that is currently missing is the one to interact with USB devices. Having such an API would be useful for servers, cars, IOT devices, etc. The goal of this master's thesis is to create an USB proposal for expanding the WASI, and eventually add support for USB to WASI. With access control, users can decide which devices a program running in WASM can access.
+Updating software of IOT devices is currently difficult. As the devices are home appliances, they are often used for longer periods of time, compared to other tech such as smartphones. As a consequence, these devices need longer software support. In reality, a lot of devices stop getting updates after a few years, making them vulnerable to cyberattacks. When an IOT device gets hacked, it can be used as part of a botnet, or worse, send sensitive info (such as a video feed) to the attacker.
 
-\section{Objectives}
+There are multiple causes to why this software support is short: no standardized updating mechanisms, special hardware and compilers, etc.
+
+In Webbrowsers, \acrfull{Wasm} acts as a generalized layer between the native browser API and a programming language. This model can also be applied outside the browser context and can solve some of the current problems of current native code.
+
+However, in order to do so, some changes are needed. As \acrshort{Wasm} is primarily targeted towards browser applications, it only provides libraries to do those things, for example accessing the DOM. No low-level libraries exist for controlling hardware devices, which would be required for IOT devices. To solve this, a new specification was created: the \acrfull{WASI}
+
+\acrshort{WASI} is a group of API specifications that can be used with software compiled to \acrshort{Wasm}. These APIs provide a standardized interface for any programming language that can compile to \acrshort{Wasm}. Because the APIs act as a layer between the native APIs and the application, access control can be applied to control what an application can access. To provide APIs that feel natural in any language, a new interface description language was born: \acrfull{WIT}. For each programming language, bindings can be created that expose a generalized API.
+
+With \acrshort{WASI}, standardized APIs can be created that can be used to talk and control hardware. As the APIs are not device specific anymore and no compiling to specific architectures is needed anymore, updating software for IOT devices has become a lot easier.
+
+\section*{Problem}
+
+The \acrshort{WASI} standard is still in development and is not finished yet. One of the APIs that is currently missing is one for USB devices. Having an API for USB devices is crucial for IOT devices, as a lot of hardware, such as cameras, will oftentimes communicate over USB.
+
+\section*{Goal}
+
+The goal of this master's thesis is to research the possibilities to add a new USB API to WASI. Afterwards, a new proposal will be created to add the new API to the official standard. Special attention will be given to access control, so that programs don't have access to all devices by default, reducing a possible attack surface. Benchmarks will test the performance of a WASI USB implementation compared to native code and Wasm in the browser.
+
+\section*{Research Questions}
+
+
 
 
 
