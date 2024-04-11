@@ -38,3 +38,21 @@ Control transfers are used for configuration, command and status operations betw
 The Control transfer type can be seen as a TCP connection but for USB devices.
 
 \subsection{Descriptors}
+
+\section{LibUSB}
+
+\section{WebUSB}
+
+The WebUSB specification allows webpages to control non-standard USB devices. Browsers already provide easy APIs for common USB devices, such as mice, keyboards, cameras and microphones. However, accessing devices that do not follow these common USB use cases were not supported in the browser. In 201x, the WebUSB specification was created to provide a new API that allows this.
+
+WebUSB has been proven useful in a lot of cases. For example, it has been used to control arduinos and upload new programs to these devices. Another kind of use case is to easily upgrade devices through USB, without the requirement to install special software. 
+
+For example, after discontinuing its game streaming service Stadia, Google provided a firmware update for its Stadia controllers to enable bluetooth support. This update could be installed by connecting the controller to the computer and following the steps on the website. No additional software needed to be installed, making it very user-friendly.
+
+WebUSB is not part of the web standards and is currently only supported in Chromium-based browsers. WebUSB only provides a limited javascript API and is an abstraction over the raw USB interface, making it less useful for IOT devices.
+
+\section{Docker}
+
+\section{WASI}
+
+\section{WIT}
