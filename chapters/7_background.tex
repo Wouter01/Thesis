@@ -39,11 +39,19 @@ The Control transfer type can be seen as a TCP connection but for USB devices.
 
 \subsection{Descriptors}
 
-\section{LibUSB}
+\section{Existing Solutions}
 
-\section{WebUSB}
+\subsection{LibUSB}
+LibUSB is a versatile open-source library that offers platform-independent access to USB devices. Essentially, it is a thin wrapper around the system-provided USB APIs, providing a universal API. LibUSB is a C library and works on native hardware. It also works completely in user-mode, meaning no special privileges are required to communicate with USB devices. This makes it a very popular library to control USB devices, as it removes most issues that would occur when trying to support multiple platforms. It is also version-agnostic, so it will work with each USB protocol (1.0 - 4.0) \footnote{https://github.com/libusb/libusb/wiki/FAQ\#does-libusb-support-usb-3031324}
 
-The WebUSB specification allows webpages to control non-standard USB devices. Browsers already provide easy APIs for common USB devices, such as mice, keyboards, cameras and microphones. However, accessing devices that do not follow these common USB use cases were not supported in the browser. In 201x, the WebUSB specification was created to provide a new API that allows this.
+As LibUSB makes creating cross-platform USB programs easy, it is used by most other technologies in this chapter, such as WebUSB (\ref{section:WebUSB}) and our own implementation.
+
+\subsection{WebUSB}
+\label{section:WebUSB}
+
+WebUSB is a library to work with USB devices in browsers.
+
+The WebUSB specification allows webpages to control non-standard USB devices. Browsers already provide easy APIs for common USB devices, such as mice, keyboards, cameras and microphones. However, accessing devices that do not follow these common USB use cases were not supported in the browser. In 2017, the WebUSB specification was created to provide a new API that allows this.
 
 WebUSB has been proven useful in a lot of cases. For example, it has been used to control Arduino devices and upload new programs to these devices. Another kind of use case is to easily upgrade devices through USB, without the requirement to install special software. 
 
@@ -51,8 +59,10 @@ For example, after discontinuing its game streaming service Stadia, Google provi
 
 WebUSB is not part of the web standards and is currently only supported in Chromium-based browsers. WebUSB only provides a limited javascript API and is an abstraction over the raw USB interface, making it less useful for IOT devices.
 
-\section{Docker}
+WebUSB can currently be used by Wasm applications in the browser through the Javascript interface. However, this solution is far from ideal: there is additional overhead from using Javascript. Javascript is an interpreted language with dynamic and weak types. These capabilities make it harder to make a performant type-safe API. Furthermore, the API provides an abstraction over the USB specification and doesn't expose some parts of it.
 
-\section{WASI}
+\section{WebAssembly Technologies}
 
-\section{WIT}
+\subsection{WASI}
+
+\subsection{WIT}
