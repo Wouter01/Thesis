@@ -1,8 +1,85 @@
 \begin{appendices}
-\section*{Bijlage A}
-\addcontentsline{toc}{section}{Bijlage A}  
 
-Toelichting bijlage.
+\section*{USB Descriptors}
+\label{appendix:descriptors}
+\addcontentsline{toc}{section}{USB Descriptors}  
+
+\begin{table}[h]
+\centering
+\label{tab:usb_descriptor}
+\begin{tabular}{|c|l|c|l|p{8cm}|}
+\hline
+\textbf{Offset} & \textbf{Field} & \textbf{Size} & \textbf{Value} & \textbf{Description} \\ \hline
+0 & bLength & 1 & Number & Size of the Descriptor in Bytes (18 bytes) \\ \hline
+1 & bDescriptorType & 1 & Constant & Device Descriptor (0x01) \\ \hline
+2 & bcdUSB & 2 & BCD & USB Specification Number which device complies to \\ \hline
+4 & bDeviceClass & 1 & Class & Class Code. If equal to Zero, each interface specifies its own class code. If equal to 0xFF, the class code is vendor specified. Otherwise, the field is a valid Class Code. \\ \hline
+5 & bDeviceSubClass & 1 & SubClass & Subclass Code \\ \hline
+6 & bDeviceProtocol & 1 & Protocol & Protocol Code \\ \hline
+7 & bMaxPacketSize & 1 & Number & Maximum Packet Size for Zero Endpoint. Valid Sizes are 8, 16, 32, 64 \\ \hline
+8 & idVendor & 2 & ID & Vendor ID \\ \hline
+10 & idProduct & 2 & ID & Product ID \\ \hline
+12 & bcdDevice & 2 & BCD & Device Release Number \\ \hline
+14 & iManufacturer & 1 & Index & Index of Manufacturer String Descriptor \\ \hline
+15 & iProduct & 1 & Index & Index of Product String Descriptor \\ \hline
+16 & iSerialNumber & 1 & Index & Index of Serial Number String Descriptor \\ \hline
+17 & bNumConfigurations & 1 & Integer & Number of Possible Configurations \\ \hline
+\end{tabular}
+\caption{Device Descriptor}
+\end{table}
+
+\begin{table}[h]
+\centering
+\label{tab:usb_configuration_descriptor}
+\begin{tabular}{|c|l|c|l|p{8cm}|}
+\hline
+\textbf{Offset} & \textbf{Field} & \textbf{Size} & \textbf{Value} & \textbf{Description} \\ \hline
+0 & bLength & 1 & Number & Size of Descriptor in Bytes \\ \hline
+1 & bDescriptorType & 1 & Constant & Configuration Descriptor (0x02) \\ \hline
+2 & wTotalLength & 2 & Number & Total length in bytes of data returned \\ \hline
+4 & bNumInterfaces & 1 & Number & Number of Interfaces \\ \hline
+5 & bConfigurationValue & 1 & Number & Value to use as an argument to select this configuration \\ \hline
+6 & iConfiguration & 1 & Index & Index of String Descriptor describing this configuration \\ \hline
+7 & bmAttributes & 1 & Bitmap & D7 Reserved, set to 1. (USB 1.0 Bus Powered) D6 Self Powered D5 Remote Wakeup D4..0 Reserved, set to 0. \\ \hline
+8 & bMaxPower & 1 & mA & Maximum Power Consumption in 2mA units \\ \hline
+\end{tabular}
+\caption{Configuration Descriptor}
+\end{table}
+
+\begin{table}[h]
+\centering
+\label{tab:usb_interface_descriptor}
+\begin{tabular}{|c|l|c|l|p{6cm}|}
+\hline
+\textbf{Offset} & \textbf{Field} & \textbf{Size} & \textbf{Value} & \textbf{Description} \\ \hline
+0 & bLength & 1 & Number & Size of Descriptor in Bytes (9 Bytes) \\ \hline
+1 & bDescriptorType & 1 & Constant & Interface Descriptor (0x04) \\ \hline
+2 & bInterfaceNumber & 1 & Number & Number of Interface \\ \hline
+3 & bAlternateSetting & 1 & Number & Value used to select alternative setting \\ \hline
+4 & bNumEndpoints & 1 & Number & Number of Endpoints used for this interface \\ \hline
+5 & bInterfaceClass & 1 & Class & Class Code \\ \hline
+6 & bInterfaceSubClass & 1 & SubClass & Subclass Code \\ \hline
+7 & bInterfaceProtocol & 1 & Protocol & Protocol Code \\ \hline
+8 & iInterface & 1 & Index & Index of String Descriptor Describing this interface \\ \hline
+\end{tabular}
+\caption{Interface Descriptor}
+\end{table}
+
+\begin{table}[h]
+\centering
+\label{tab:usb_endpoint_descriptor}
+\begin{tabular}{|c|l|c|l|p{8cm}|}
+\hline
+\textbf{Offset} & \textbf{Field} & \textbf{Size} & \textbf{Value} & \textbf{Description} \\ \hline
+0 & bLength & 1 & Number & Size of Descriptor in Bytes (7 bytes) \\ \hline
+1 & bDescriptorType & 1 & Constant & Endpoint Descriptor (0x05) \\ \hline
+2 & bEndpointAddress & 1 & Endpoint & Endpoint Address. Bits 0..3b Endpoint Number. Bits 4..6b Reserved. Set to Zero. Bits 7 Direction 0 = Out, 1 = In (Ignored for Control Endpoints) \\ \hline
+3 & bmAttributes & 1 & Bitmap & Bits 0..1 Transfer Type. 00 = Control, 01 = Isochronous, 10 = Bulk, 11 = Interrupt. Bits 2..7 are reserved. If Isochronous endpoint, Bits 3..2 = Synchronisation Type (Iso Mode). 00 = No Synchronisation, 01 = Asynchronous, 10 = Adaptive, 11 = Synchronous. Bits 5..4 = Usage Type (Iso Mode). 00 = Data Endpoint, 01 = Feedback Endpoint, 10 = Explicit Feedback Data Endpoint, 11 = Reserved. \\ \hline
+4 & wMaxPacketSize & 2 & Number & Maximum Packet Size this endpoint is capable of sending or receiving \\ \hline
+6 & bInterval & 1 & Number & Interval for polling endpoint data transfers. Value in frame counts. Ignored for Bulk \& Control Endpoints. Isochronous must equal 1 and field may range from 1 to 255 for interrupt endpoints. \\ \hline
+\end{tabular}
+\caption{Endpoint Descriptor}
+\end{table}
 
 
 

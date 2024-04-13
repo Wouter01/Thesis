@@ -4,7 +4,7 @@ In the early days of computers, various connectors existed for computers to comm
 
 In this thesis, the focus is on the software side of the USB standard. Therefore, the hardware will not be considered further.
 
-\section{Transferring Data}
+\section{Transferring Data \cite{USB_in_a_NutShell}}
 \subsection{Pipes}
 Data is transferred through pipes. A pipe is a connection from the host controller to the endpoint. Not all pipes are the same: they differ in the bandwidth they support, which transfer types are supported, in which direction data can flow, and their packet and buffer size. Pipes can generally be split up into two kinds.
 
@@ -15,6 +15,7 @@ A Streaming Pipe is a one-way communication channel for the host or guest device
 A Message Pipe is a bidirectional communication channel. This pipe allows both the host and guest device to send commands in either direction on the same pipe. All message pipes are controlled by the host device. Only one transfer type supports this pipe: the control transfer type.
 
 \subsection{Transfer Types}
+\label{section:transfer_types}
 The USB standard defines four transfer types. Each transfer type serves a different purpose, being optimized for speed, latency, correctness or reliability.
 
 \subsubsection{Interrupt Transfer}
@@ -39,17 +40,52 @@ The Control transfer type can be seen as a TCP connection but for USB devices.
 
 \subsection{Descriptors}
 
+Descriptors are used numerous times throughout the USB specification. They define a standardized way to provide information about a part of the specification.
+
+Details of each descriptor can be found in the appendix \ref{appendix:descriptors}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{images/descriptor_tree.png}
+  \caption{Descriptor Tree}
+  \label{fig:descriptor_tree}
+\end{figure}
+
+\subsubsection{Device Descriptors}
+
+Each USB device has a device descriptor, which contains general information about the device, such as what name is has, which protocols it supports, its serial number, how much configurations it has, and more. This descriptor is essentially the entrypoint to do anything with the device.
+
+\subsubsection{Configuration Descriptors}
+
+The configuration descriptor provides information about a configuration of a USB device. A devices can have multiple configurations, each defining different combinations of interfaces and endpoints that the device supports.
+
+Each configuration descriptor contains a standardized set of fields, such as how many interfaces it contains (and the descriptors for these interfaces), or the power consumption of the configuration. The host device can also determine if the device is self-powered or bus-powered based off the configuration descriptor.
+
+When a USB device is connected to a host, the host uses the configuration descriptor to determine which configuration to activate and how to communicate with the device.
+
+\subsubsection{Interface Descriptors}
+
+The interface descriptor provides information such as the interface number, the alternate setting number (if multiple settings are available for the interface), the number of endpoints associated with the interface, and more.
+
+\subsubsection{Endpoint Descriptors}
+
+Endpoints are the communication channels through which data is transmitted between the host device and the USB device.
+
+The endpoint descriptor provides information such as the endpoint address (with the direction of data flow), transfer speed, transfer type (see \ref{section:transfer_types}), and more.
+
+Each endpoint can have any transfer type, except for endpoint zero. This endpoint is assumed to be a control endpoint, and will have a control transfer type. Endpoint zero will be used to communicate with the device to get its descriptors.
+
 \section{Existing Solutions}
 
 \subsection{LibUSB}
-LibUSB is a versatile open-source library that offers platform-independent access to USB devices. Essentially, it is a thin wrapper around the system-provided USB APIs, providing a universal API. LibUSB is a C library and works on native hardware. It also works completely in user-mode, meaning no special privileges are required to communicate with USB devices. This makes it a very popular library to control USB devices, as it removes most issues that would occur when trying to support multiple platforms. It is also version-agnostic, so it will work with each USB protocol (1.0 - 4.0) \footnote{https://github.com/libusb/libusb/wiki/FAQ\#does-libusb-support-usb-3031324}
+LibUSB \cite{LibUSB} is a versatile open-source library that offers platform-independent access to USB devices. Essentially, it is a thin wrapper around the system-provided USB APIs, providing a universal API. LibUSB is a C library and works on native hardware. It also works completely in user-mode, meaning no special privileges are required to communicate with USB devices. This makes it a very popular library to control USB devices, as it removes most issues that would occur when trying to support multiple platforms. It is also version-agnostic, so it will work with each USB protocol (1.0 - 4.0) \footnote{https://github.com/libusb/libusb/wiki/FAQ\#does-libusb-support-usb-3031324}
 
 As LibUSB makes creating cross-platform USB programs easy, it is used by most other technologies in this chapter, such as WebUSB (\ref{section:WebUSB}) and our own implementation.
 
 \subsection{WebUSB}
 \label{section:WebUSB}
 
-WebUSB is a library to work with USB devices in browsers.
+WebUSB \cite{WebUSB} is a library to work with USB devices in browsers.
 
 The WebUSB specification allows webpages to control non-standard USB devices. Browsers already provide easy APIs for common USB devices, such as mice, keyboards, cameras and microphones. However, accessing devices that do not follow these common USB use cases were not supported in the browser. In 2017, the WebUSB specification was created to provide a new API that allows this.
 
