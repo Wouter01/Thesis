@@ -7,7 +7,7 @@ This chapter will give insight in what \acrfull{Wasm} is and how it works, along
 When the web was born, the only supported programming language supported on the web was Javascript. As a relatively simple and portable language this did suffice. Over the years the web has become more complex and has become the center of the personal computer. However, its supported technologies did not grow at the same expansion pace. Javascript is still the only supported language and hampers the further expansion of the web. New technologies have been created to fix this issue, but none have succeeded. 
 In order to be a viable Javascript alternative, a new model needs to be safe, fast, portable and compact. \acrshort{Wasm} is the first new technology to check all these four boxes. \cite{bringing_the_web_up_to_speed}
 
-\subsection*{How}
+\subsection*{How?}
 
 \subsubsection{Safe}
 Wasm is intended to run in various environments, with some executing Wasm code from unknown sources. The web is a prime example of such a case. In these cases, it is required that the code runs in a sandbox, so that it cannot access all resources of the device. This way, malicious code can only do harm in the sandbox, and not the entire device.
@@ -39,9 +39,12 @@ To achieve a small program, which is often critical for quickly loading websites
 
 \section{\acrshort{WASI}}
 
-\subsection*{Why}
+\subsection*{Why?}
+When writing code that compiles to Wasm, there is a need for system interfaces. These are required to do useful stuff, such as getting access to files. In the browser, WebAssembly applications can use Javascript as a system interface. However, outside the browser, there is no such predefined system interface. To solve this problem the \acrfull{WASI} was created.
 
-\subsection*{How}
+\subsection*{How?}
+
+
 
 \subsubsection{The Component Model}
 
