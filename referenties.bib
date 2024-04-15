@@ -3,3 +3,72 @@
 @misc{WebUSB, url={https://wicg.github.io/webusb/}, journal={WebUSB API}, year={2023}, month={Nov}, title={WebUSB}}
 
 @misc{USB_in_a_NutShell, url={https://www.beyondlogic.org/usbnutshell/usb1.shtml}, journal={USB in a NutShell}, title={USB in a NutShell}}  
+
+@Article{overview_of_webassembly,
+AUTHOR = {Ray, Partha Pratim},
+TITLE = {An Overview of WebAssembly for IoT: Background, Tools, State-of-the-Art, Challenges, and Future Directions},
+JOURNAL = {Future Internet},
+VOLUME = {15},
+YEAR = {2023},
+NUMBER = {8},
+ARTICLE-NUMBER = {275},
+URL = {https://www.mdpi.com/1999-5903/15/8/275},
+ISSN = {1999-5903},
+ABSTRACT = {This paper explores the relationship between two emerging technologies, WebAssembly (Wasm) and the Internet of Things (IoT). It examines the complementary roles of these technologies and their impact on modern web applications. First, it delves into the capabilities of Wasm as a high-performance binary format that allows developers to leverage low-level languages for computationally intensive tasks. Second, it seeks to explain why integration of IoT and Wasm is important. Third, it discusses the strengths and limitations of various tools and tool chains that are crucial for Wasm development and implementation, with a special focus on IoT. Fourth, it presents the state-of-the-art with regard to advances that combine both technologies. Fifth, it discusses key challenges and provides future directions. Lastly, it provides an in-depth elaboration of the future aspects of Wasm, with a strong focus on IoT, concluding that IoT and Wasm can provide developers with a versatile toolkit that enables them to balance productivity and performance in both web and non-web development scenarios. The collaborative use of these technologies opens up new possibilities for pushing the boundaries of web application development in terms of interactivity, security, portability, scalability, and efficient computational capabilities. As web and non-web embeddings continue to evolve, the integration of IoT and Wasm will play a crucial role in shaping the future of innovative application development. The key findings of this extensive review work suggest that existing tool sets can be easily conglomerated together to form a new era in WebAssembly–IoT infrastructure for low-power, energy-efficient, and secure edge–IoT ecosystems with near-native execution speed. Furthermore, the expansion of edge–IoT ecosystems can be augmented with prospective cloud-side deployments. However, there remains a strong need to more cohesively advance the amalgamation of Wasm and IoT technologies in the near future.},
+DOI = {10.3390/fi15080275}
+}
+
+@article{bringing_the_web_up_to_speed,
+author = {Haas, Andreas and Rossberg, Andreas and Schuff, Derek L. and Titzer, Ben L. and Holman, Michael and Gohman, Dan and Wagner, Luke and Zakai, Alon and Bastien, JF},
+title = {Bringing the web up to speed with WebAssembly},
+year = {2017},
+issue_date = {June 2017},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {52},
+number = {6},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/3140587.3062363},
+doi = {10.1145/3140587.3062363},
+abstract = {The maturation of the Web platform has given rise to sophisticated and demanding Web applications such as interactive 3D visualization, audio and video software, and games. With that, efficiency and security of code on the Web has become more important than ever. Yet JavaScript as the only built-in language of the Web is not well-equipped to meet these requirements, especially as a compilation target.  Engineers from the four major browser vendors have risen to the challenge and collaboratively designed a portable low-level bytecode called WebAssembly. It offers compact representation, efficient validation and compilation, and safe low to no-overhead execution. Rather than committing to a specific programming model, WebAssembly is an abstraction over modern hardware, making it language-, hardware-, and platform-independent, with use cases beyond just the Web. WebAssembly has been designed with a formal semantics from the start. We describe the motivation, design and formal semantics of WebAssembly and provide some preliminary experience with implementations.},
+journal = {SIGPLAN Not.},
+month = {jun},
+pages = {185–200},
+numpages = {16},
+keywords = {assembly languages, just-in-time compilers, programming languages, type systems, virtual machines}
+}
+
+@misc{docker_without_containers, url={https://wasmlabs.dev/articles/docker-without-containers/}, journal={WebAssembly: Docker without containers!}, author={Alexandrov, Asen and About the authors    
+Asen Alexandrov
+Staff Engineer at OCTO        Daniel Lopez
+Sr. Director at OCTO and OCTO, Asen Alexandrov
+Staff Engineer at and OCTO, Daniel Lopez
+Sr. Director at}} 
+
+@unknown{wasm_vulnerabilities,
+author = {Brito, Tiago and Lopes, Pedro and Santos, Nuno and Santos, José},
+year = {2022},
+month = {04},
+pages = {},
+title = {Wasmati: An Efficient Static Vulnerability Scanner for WebAssembly}
+}
+
+@article{stack_vs_register_machine,
+author = {Shi, Yunhe and Casey, Kevin and Ertl, M. Anton and Gregg, David},
+title = {Virtual machine showdown: Stack versus registers},
+year = {2008},
+issue_date = {January 2008},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {4},
+number = {4},
+issn = {1544-3566},
+url = {https://doi.org/10.1145/1328195.1328197},
+doi = {10.1145/1328195.1328197},
+abstract = {Virtual machines (VMs) enable the distribution of programs in an architecture-neutral format, which can easily be interpreted or compiled. A long-running question in the design of VMs is whether a stack architecture or register architecture can be implemented more efficiently with an interpreter. We extend existing work on comparing virtual stack and virtual register architectures in three ways. First, our translation from stack to register code and optimization are much more sophisticated. The result is that we eliminate an average of more than 46\% of executed VM instructions, with the bytecode size of the register machine being only 26\% larger than that of the corresponding stack one. Second, we present a fully functional virtual-register implementation of the Java virtual machine (JVM), which supports Intel, AMD64, PowerPC and Alpha processors. This register VM supports inline-threaded, direct-threaded, token-threaded, and switch dispatch. Third, we present experimental results on a range of additional optimizations such as register allocation and elimination of redundant heap loads. On the AMD64 architecture the register machine using switch dispatch achieves an average speedup of 1.48 over the corresponding stack machine. Even using the more efficient inline-threaded dispatch, the register VM achieves a speedup of 1.15 over the equivalent stack-based VM.},
+journal = {ACM Trans. Archit. Code Optim.},
+month = {jan},
+articleno = {2},
+numpages = {36},
+keywords = {Interpreter, register architecture, stack architecture, virtual machine}
+}
