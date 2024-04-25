@@ -1,1 +1,114 @@
 \chapter{Architecture}
+The \acrshort{WASI} \acrshort{USB} \acrshort{API} can be defined in a few distinct areas:
+
+\begin{itemize}
+
+\item Runtime implementation
+
+\item WIT creation
+
+\item Guest implementation
+
+\item Proposal creation
+
+\item Proposal feedback
+
+\end{itemize} 
+
+Figure \ref{image:api_areas} shows an overview of how the API works internally. 
+
+\begin{figure}[!h]
+\centering
+\begin{tikzpicture}
+	[mynode/.style = {rectangle, draw, align=center, 
+			inner xsep=6mm, inner ysep=3mm},
+	-latex,     
+	]
+
+	% nodes
+	\node[mynode, label={[name=wasm]Wasm Runtime}] (inner) {Guest (Wasm Module)};
+	\node[fit={(inner) (wasm)}, draw] (outer) {};
+	
+	\node[mynode,  left=10mm of inner.west] (wasiusb) {WASI USB};
+	\node[mynode, below=10mm of wasiusb.south] (libusb) {LibUSB};
+	\node[mynode, right=10mm of libusb.east] (nativeusb) {Native USB};
+
+	% connections
+	\draw [<->, very thick] (wasiusb.east) to (inner.west);
+	\draw [<->, very thick] (wasiusb.south) to (libusb.north);
+	\draw [<->, very thick] (libusb.east) to (nativeusb.west);
+\end{tikzpicture}
+\caption{Internals of the WASI USB API. The arrows represent communication between the different areas.}
+\label{image:api_areas}
+\end{figure}
+
+\section{WIT creation}
+The WIT file provides the definition of the interface between the WASI USB API and a WASM module. Languages with support for the component model provide a way to generate bindings based on the WIT interface. These bindings are used to interact in a natural way with the WIT interface.
+
+In this section, the current USB WIT interface is shown and explained.
+
+Sidenote: in this chapter, WIT interface and interface will both be used, but have a different meaning.
+WIT interface refers to the whole WIT file.
+A WIT file itself also contains interfaces, which are also discussed here as interfaces. An interface can be thought of as an instance in the WebAssembly Component Model, for example a unit of functionality imported from the host or implemented by a component for consumption on a host. All functions and types belong to an interface. \footnote{https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md\#wit-interfaces}
+
+\inputminted{yaml}{wit/world.wit}
+
+the world \texttt{imports} is the main entrypoint of the interface. It imports 3 subsections of the interface: \texttt{types}, \texttt{descriptors} and \texttt{usb}. These are separate files with different parts of the interface. The world imports them so they are included in the interface.
+
+\inputminted{yaml}{wit/types.wit}
+
+The \texttt{types} interface provides all the data structures used in the WIT interface.
+
+\paragraph{device-handle-error}
+An enum containing all the possible error values that could occur when using the USB API.
+
+\paragraph{direction}
+An enum representing a direction. This is used to represent the direction bit (in bEndpointAddress) in endpoint descriptors.
+
+\paragraph{usage-type}
+An enum representing various usage types. This is used to represent the usage type bit (in bmAttributes) in endpoint descriptors.
+
+\paragraph{sync-type}
+An enum representing various sync types. This is used to represent the synchronisation type bit (in bmAttributes) in endpoint descriptors.
+
+\paragraph{transfer-type}
+An enum representing the four transfer types. This is used to represent the transfer type bit (in bmAttributes) in endpoint descriptors.
+
+\paragraph{version}
+This struct is used to represent the device-version (bcdDevice) and usb-version (bcdUSB) fields in the device descriptor.
+
+\inputminted{yaml}{wit/descriptors.wit}
+
+the \texttt{descriptors} interface contains records for each descriptor kind in the descriptor tree (Figure \ref{fig:descriptor_tree}).
+
+\inputminted{yaml}{wit/device.wit}
+
+\section{Runtime implementation}
+The runtime implementation contains the code to create the API. This code runs natively and is therefore system-dependent and not portable. However, this implementation uses LibUSB, which makes supporting all relevant desktop operating systems effortless.
+
+\section{Standardization}
+The goal of this master's thesis is to extend the WASI standard with a new USB API. In order to do this, the API must go through a standardization process. This way, a consensus can be made about how the API should work, which platforms it will work on, and what its scope is. When gone through the proposal, one universal API can be offered that is supported by all runtimes which are WASI-compliant.
+
+In order for the USB API to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the API. Throughout the standardization process, the proposal will go through 5 stages:
+
+\paragraph{Phase 0 (Pre-Proposal)}
+In Phase 0, no proposal exists yet. Ideas for new, but not yet decided proposals are generally considered to be in Phase 0.
+
+\paragraph{Phase 1}
+When there is enough interest in a proposal and the idea seems viable, the proposal gets discussed in an online WASI meeting. The person who will create the proposal explains the idea, what it would solve, and how it can and cannot be used. This is often also the first moment to get feedback from the community. Each attendee of the meeting casts a vote about the idea. If the majority of the people approve, the idea can move to Phase 1, and a proposal can be created. Champions (people that will create the proposal) get assigned to the proposal.
+
+At the time of writing, \texttt{wasi-usb} is in Phase 1.
+
+\paragraph{Phase 2}
+
+
+
+\paragraph{Phase 3}
+
+\paragraph{Phase 4}
+
+\paragraph{Phase 5}
+
+
+A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here}.
+
