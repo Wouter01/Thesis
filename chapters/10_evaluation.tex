@@ -1,22 +1,18 @@
 \chapter{Evaluation}
 
 \section{Proof of Concept}
-When developing the API, it is often useful to already have guest code utilizing the API.
+When developing the API, it is useful to already have guest code utilizing the API to quickly iterate. The following proof of concept is one of the guest programs created to test the API. It touches on all the parts of the API: getting device updates and receiving and sending data through the USB interface. As it is a proof of concept, it does not test the performance of the API.
 
-Two proof-of-concept guest modules were created to test the API:
+The general idea of the program is to control a game controller. The program is started and observes the connected devices. Once a controller is connected that is recognized by the program, the program will connect to the controller. The state of all the controls of the device will be read, and input updates will be print out. To test sending data over the USB interface, the program will send commands to the controller to activate the rumble motors \footnote{Rumble motors are used to vibrate the controller}.
 
-\subsection{Reading \& Controlling a Game Controller}
-
-This proof of concept was created once most of the API parts were working. It uses all big parts of the API and validates that they are working. It does not test the performance of the API.
-
-An overview of the code:
+\subsection{Details}
 The code will call the event-related API to start watching for USB devices. It will get events when devices are connected or disconnected. As WASI does not support asynchronous code yet, a form of polling is used to get device connection events. The guest code uses a single-threaded asynchronous runtime, which will often yield to get new device connection events. This way, a multi-threaded real app can be simulated.
 
 Each time a device connection event happens, the device product and vendor ID are checked to see if they match the predefined controller product and vendor ID. A Google Stadia controller is used to test this code, so the IDs of this controller type are used. If the IDs match, a connection is made to the device by opening a device handle. When a device disconnection event with matching IDs happens, the program will stop reading the controller state, and wait for a new connection.
 
 The program will now try reading the controller state. This way, it can know about the positions of buttons, joysticks, triggers, etc. In order to do this, the correct interface and endpoint must be chosen. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. In order to send information over the interface, it must first be claimed by the program. Some operating systems will attach to the interfaces by default. The host code of the API will automatically disconnect kernel attachments when claiming an interface. However, different operating systems can have different behavior in this part. For example, macOS, where the example program was ran on, does not allow detaching kernel interfaces by default for certain device classes, such as controllers. This is problematic, as we cannot interact in any way with the device this way. Elevated privileges were required (\texttt{sudo}) to get the program working. While being annoying, this was also a useful discovery, as this issue can be added to the proposal, so the standard can adjust to this.
 
-Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample game state output is showed in Figure \ref{fig:wasi_controller_sample_output}.
+Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample controller state output is showed in Figure \ref{fig:wasi_controller_sample_output}.
 
 \begin{figure}[h]
 \begin{minted}{python}
@@ -31,13 +27,12 @@ r2: 172
 \label{fig:wasi_controller_sample_output}
 \end{figure}
 
-Lastly, the program also tests sending data over the USB interface. A controller is generally an input-only device. However, modern controllers often have a rumbling feature, where the controller will vibrate, to get a more immersive playing experience. This test program sends data over the USB interface to trigger the rumble feature. Specifically, it will map the state of the shoulder trigger button pressure to the intensity of a rumble motor.
-
-\subsection{Controlling Arduino}
+Lastly, the program also tests sending data over the USB interface. A controller is generally an input-only device. However, modern controllers often have a rumbling feature, where the controller will vibrate, to get a more immersive playing experience. This test program sends data over the USB interface to control the rumble feature. It will map the state of the shoulder trigger button pressure to the intensity of a rumble motor.
 
 
 \section{Performance Testing}
 
 \subsection{Latency}
 
-Test tussen uitlezen state controller 
+\subsection{Memory Usage}
+ 
