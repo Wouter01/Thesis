@@ -1,1 +1,43 @@
 \chapter{Proposal}
+
+\section{Standardization}
+The goal of this master's thesis is to extend the WASI standard with a new USB API. In order to do this, the API must go through a standardization process. This way, a consensus can be made about how the API should work, which platforms it will work on, and what its scope is. When gone through the proposal, one universal API can be offered that is supported by all runtimes which are WASI-compliant.
+
+In order for the USB API to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the API. Throughout the standardization process, the proposal will go through 5 stages:
+
+\paragraph{Phase 0 (Pre-Proposal)}
+When there is enough interest in a proposal and the idea seems viable, the proposal gets discussed in an online WASI meeting. The person who will create the proposal explains the idea, what it would solve, and how it can and cannot be used. This is often also the first moment to get feedback from the community. Each attendee of the meeting casts a vote about the idea. If the majority of the people approve, the idea can move to Phase 1, and a proposal can be created. Champions (people that will create the proposal) get assigned to the proposal.
+
+At the time of writing, \texttt{wasi-usb} is in Phase 1.
+
+\paragraph{Phase 1}
+To be able to move to phase 2, the requirements for phase 1 are worked out:
+\begin{itemize}
+\item The WIT interface gets created and documented by the champions. The WIT interface should be mostly finalized, but small changes can occur.
+\item Prototype implementations are required to evaluate the viability of the created API.
+\item The portability criteria are defined:
+\begin{itemize}
+\item Portability: On which platforms should the API run, what parts of the API are available on which platform
+\item Practicality: The proposal should demonstrate that the API can be used in real-world scenarios
+\item Testing: Define how the API should be tested and on which devices.
+\item Implementations: In Phase 3, each proposal should have at least two implementations in different WASI runtimes. The kinds of implementations are defined here.
+\end{itemize}
+\end{itemize}
+
+These portability criteria are defined in this phase, but get worked out in the later phases.
+Once these requirements are met, the proposal can move to phase 2.
+
+\paragraph{Phase 2}
+During phase 2, one host implementation is created to test the API. Dependencies of the implementation should have already reached at least stage two.
+Furthermore, a plan is developed for how the portability criteria will be met.
+
+\paragraph{Phase 3}
+In Phase 3, extra implementations of the API are made in different WASI runtimes. All implementations should pass the testing defined in the portability criteria and be complete. In addition, the dependencies used in the implementation should have reached the proposal phase 3. To further test the API, Libraries and other tools that use the API are built.
+
+\paragraph{Phase 4 \& 5}
+
+No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not final yet. These stages finalize the standardization of the API.
+
+
+A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here}.
+
