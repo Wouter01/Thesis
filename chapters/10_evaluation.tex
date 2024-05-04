@@ -32,14 +32,21 @@ Lastly, the program also tests sending data over the USB interface. A controller
 
 \section{Performance Testing}
 
-\subsubsection{Hardware Overview}
-The hardware used for testing the performance of the API is the following:
+\begin{table}[H]
+\[
+\begin{array}{|l|l|l|l|l|l|}
+\hline
+\textbf{Device Kind} & \textbf{Name} & \textbf{SoC/Microcontroller} & \textbf{RAM} & \textbf{Storage} \\
+\hline
+\text{Host} & \text{Apple Macbook Air (2020)} & \text{Apple M1 (8-core CPU, 7-core GPU)} & \text{8GB} & \text{256GB SSD} \\
 
-\begin{itemize}
-\item Apple M1 Macbook Air (2020), 8GB RAM, 256GB SSD, 8-core CPU, 7-core GPU (Host Device) \footnote{https://support.apple.com/en-us/111883}
-
-\item Arduino Micro, ATmega32U4 Microcontroller (Guest Device) \footnote{https://store.arduino.cc/products/arduino-micro}
-\end{itemize}
+\hline
+\text{Guest} & \text{Arduino Micro} & \text{Atmel ATmega32U4} & \text{2,5KB} & \text{32KB Flash} \\
+\hline
+\end{array}
+\]
+\caption{The hardware used for testing the performance of the API}
+\end{table}
 
 
 \subsection{Latency}
