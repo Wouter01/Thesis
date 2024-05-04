@@ -10,7 +10,7 @@ The code will call the event-related API to start watching for USB devices. It w
 
 Each time a device connection event happens, the device product and vendor ID are checked to see if they match the predefined controller product and vendor ID. A Google Stadia controller is used to test this code, so the IDs of this controller type are used. If the IDs match, a connection is made to the device by opening a device handle. When a device disconnection event with matching IDs happens, the program will stop reading the controller state, and wait for a new connection.
 
-The program will now try reading the controller state. This way, it can know about the positions of buttons, joysticks, triggers, etc. In order to do this, the correct interface and endpoint must be chosen. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. In order to send information over the interface, it must first be claimed by the program. Some operating systems will attach to the interfaces by default. The host code of the API will automatically disconnect kernel attachments when claiming an interface. However, different operating systems can have different behavior in this part. For example, macOS, where the example program was ran on, does not allow detaching kernel interfaces by default for certain device classes, such as controllers. This is problematic, as we cannot interact in any way with the device this way. Elevated privileges were required (\texttt{sudo}) to get the program working. While being annoying, this was also a useful discovery, as this issue can be added to the proposal, so the standard can adjust to this.
+The program will now try reading the controller state. This way, it knows about the positions of buttons, joysticks, triggers, etc. In order to do this, the correct interface and endpoint must be chosen. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. In order to send information over the interface, it must first be claimed by the program. Some operating systems will attach to the interfaces by default. The host code of the API will automatically disconnect kernel attachments when claiming an interface. However, different operating systems can have different behavior in this part. For example, macOS, where the example program was ran on, does not allow detaching kernel interfaces by default for certain device classes, such as controllers. This is problematic, as we cannot interact in any way with the device this way. Elevated privileges (\texttt{sudo}) were required to get the program working. While being annoying, this was also a useful discovery, as this issue can be added to the proposal, so the standard can adjust to this.
 
 Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample controller state output is showed in Figure \ref{fig:wasi_controller_sample_output}.
 
@@ -36,9 +36,9 @@ Lastly, the program also tests sending data over the USB interface. A controller
 The hardware used for testing the performance of the API is the following:
 
 \begin{itemize}
-\item Apple M1 Macbook Air, 8GB RAM (Host Device)
+\item Apple M1 Macbook Air (2020), 8GB RAM, 256GB SSD, 8-core CPU, 7-core GPU (Host Device) \footnote{https://support.apple.com/en-us/111883}
 
-\item Arduino Micro (Guest Device)
+\item Arduino Micro, ATmega32U4 Microcontroller (Guest Device) \footnote{https://store.arduino.cc/products/arduino-micro}
 \end{itemize}
 
 

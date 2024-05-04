@@ -1,4 +1,4 @@
-\chapter{Background: WebAssembly {\&} WebAssembly System Interface}
+\chapter{WebAssembly {\&} WebAssembly System Interface}
 This chapter gives insight in what \acrfull{Wasm} is and how it works, alongside additional insight in how the \acrfull{WASI} works and how it is progressing.
 
 \section{\acrshort{Wasm}}
@@ -18,7 +18,7 @@ To compile to Wasm, the source code is first compiled to an intermediate represe
 This general idea works great for compiled languages, such as C, Rust or Swift. However, for interpreted languages such as Python, the model will work different. On native instruction sets, interpreted languages are read at runtime by their interpreter, which is often written in C. To make this work in Wasm, the interpreter can be compiled to Wasm and can interpret the language source code, just like it would happen on a native machine.
 
 \subsection{Compact}
-To achieve a small program, which is often critical for quickly loading websites, Wasm acts as a stack machine instead of a register-based machine. In register-based machines, registers are used to make calculations. On stack machines, argument values and operands are pushed on the stack, and result values are popped from the stack (Figure \ref{fig:wasm_high_level}). \cite{bringing_the_web_up_to_speed} By not having the need for registers, the binary size can be made smaller. \cite{stack_vs_register_machine} Another advantage of this method is that the amount of available registers can vary on different platforms. This is not an issue with stack machines.
+To achieve a small program, which is often critical for quickly loading websites, Wasm acts as a stack machine instead of a register-based machine. In register-based machines, registers are used to make calculations. On stack machines, argument values and operands are pushed on the stack, and result values are popped from the stack (Figure \ref{fig:wasm_high_level}). \cite{bringing_the_web_up_to_speed} By not having the need for registers, the binary size can be made smaller \cite{stack_vs_register_machine}. Another advantage of this method is that the amount of available registers can vary on different platforms. This is not an issue with stack machines.
 
 \begin{figure}[h]
   \centering

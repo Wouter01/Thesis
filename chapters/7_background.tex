@@ -1,4 +1,4 @@
-\chapter{Background: USB Devices}
+\chapter{USB Foundations}
 \label{chap:rel_work}
 In the early days of computers, various connectors existed for computers to communicate with external devices. A few examples of such connectors are the PS/2 port (Primarily used for Mouse / Keyboard) or the Parallel port (Often used for printers). These connectors have varying sizes, shapes and limitations and cannot be used for all devices. Therefore, computers needed to have all these ports, requiring lots of space. To address these issues, the USB connector was introduced. Years later, the interface has become the de-facto standard for wired device communication. Over the years, USB has evolved with multiple revisions. These revisions focus on key aspects of the interface, such as transfer speeds, power delivery and added functionality. The USB connector has also undergone revisions, making it smaller and reversible, so it is usable on a larger variety of devices.
 
@@ -6,7 +6,7 @@ In this thesis, the focus is on the software side of the USB standard. Therefore
 
 \section{Transferring Data via USB}
 
-This is an introduction of the internals of the USB protocol. For more information, take a look at \href{https://www.beyondlogic.org/usbnutshell/usb1.shtml}{USB in a NutShell}
+This subsection introduces the internals of the USB protocol. For more information, take a look at \href{https://www.beyondlogic.org/usbnutshell/usb1.shtml}{USB in a NutShell} \footnote{https://www.beyondlogic.org/usbnutshell/usb1.shtml}.
 \subsection{Pipes}
 Data is transferred through pipes. A pipe is a connection from the host controller to the endpoint. Not all pipes are the same: they differ in the bandwidth they support, which transfer types are supported, in which direction data can flow, and their packet and buffer size. Pipes can generally be split up into two kinds.
 
@@ -28,12 +28,12 @@ Examples of devices that often use interrupt transfers are mice and keyboards.
 \subsubsection{Isochronous Transfer}
 Isochronous transfers are used for real-time data streaming. They provide a guaranteed data rate, but do not guarantee a correct transfer of data, and data can be lost. This makes the transfer type not suitable for situations where data integrity is important.
 
-Examples of use cases where isochronous data transfer is often used is for audio devices or video streaming.
+An example use case where isochronous data transfer is often used is streaming audio or video.
 
 \subsubsection{Bulk Transfer}
 Bulk transfers are suited for transferring large amounts of data where timing is not an issue, but data integrity is. No guarantee on timing is made, but guaranteed correct delivery is.
 
-Examples of use cases for bulk transfers are sending files to printers or storage devices.
+An example use case for bulk transfers is sending files to devices.
 
 \subsubsection{Control Transfer}
 Control transfers are used for configuration, command and status operations between the host and guest device. Control transfers operate on the Message pipe and has setup, data and handshake stages. The handshakes guarantee correct delivery, but will lead to a slower transfer speed. Therefore, control transfers are not used to transfer a lot of data, but rather for device initialization and control.
@@ -51,6 +51,7 @@ Details of each descriptor can be found in the appendix \ref{appendix:descriptor
   \includegraphics[width=0.5\textwidth]{images/descriptor_tree.png}
   \caption{Descriptor Tree of a USB device. This tree contains all useful metadata to communicate with the device.}
   \label{fig:descriptor_tree}
+  \cite{USB_in_a_NutShell}
 \end{figure}
 
 \subsubsection{Device Descriptors}
@@ -67,15 +68,15 @@ When a USB device is connected to a host, the host uses the configuration descri
 
 \subsubsection{Interface Descriptors}
 
-The interface descriptor provides information such as the interface number, the alternate setting number (if multiple settings are available for the interface), the number of endpoints associated with the interface, and more.
+The interface descriptor provides information such as the interface number, the alternate setting number (if multiple settings are available for the interface), the number of endpoints associated with the interface, etc.
 
 \subsubsection{Endpoint Descriptors}
 
 Endpoints are the communication channels through which data is transmitted between the host device and the USB device.
 
-The endpoint descriptor provides information such as the endpoint address (with the direction of data flow), transfer speed, transfer type (see \ref{section:transfer_types}), and more.
+The endpoint descriptor provides information such as the endpoint address, transfer speed, transfer type (see section \ref{section:transfer_types}), etc.
 
-Each endpoint can have any transfer type, except for endpoint zero. This endpoint is assumed to be a control endpoint, and will have a control transfer type. Endpoint zero will be used to communicate with the device to get its descriptors.
+Each endpoint can have any transfer type, except for endpoint zero. The zero endpoint is assumed to be a control endpoint, and will have a control transfer type. Endpoint zero will be used to communicate with the device to get its descriptors.
 
 \section{Existing Solutions}
 
@@ -93,8 +94,8 @@ The WebUSB specification allows webpages to control non-standard USB devices. Br
 
 WebUSB has been proven useful in a lot of cases. For example, it has been used to control Arduino devices and upload new programs to these devices. Another kind of use case is to easily upgrade devices through USB, without the requirement to install special software. 
 
-For example, after discontinuing its game streaming service Stadia, Google provided a firmware update for its Stadia controllers to enable bluetooth support. This update could be installed by connecting the controller to the computer and following the steps on the website. No additional software needed to be installed, making it very user-friendly.
+For example, after discontinuing its game streaming service Stadia, Google provided a firmware update for its Stadia controllers to enable bluetooth support \cite{stadia_bluetooth_mode}. This update could be installed by connecting the controller to the computer and following the steps on the website. No additional software needed to be installed, making it very user-friendly.
 
-WebUSB is not part of the web standards and is currently only supported in Chromium-based browsers. WebUSB only provides a limited javascript API and is an abstraction over the raw USB interface, making it less useful for IOT devices.
+WebUSB is not part of the web standards and is currently only supported in Chromium-based browsers. WebUSB only provides a limited Javascript API and is an abstraction over the raw USB interface, making it less useful for \acrshort{IoT} devices.
 
 WebUSB can currently be used by Wasm applications in the browser through the Javascript interface. However, this solution is far from ideal: there is additional overhead from using Javascript. Javascript is an interpreted language with dynamic and weak types. These capabilities make it harder to make a performant type-safe API. Furthermore, the API provides an abstraction over the USB specification and doesn't expose some parts of it.
