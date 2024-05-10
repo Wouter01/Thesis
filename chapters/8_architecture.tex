@@ -41,15 +41,23 @@ Figure \ref{image:api_areas} shows how a program using the API would look like.
 \section{\acrfull{WIT}}
 The WIT file provides the definition of the interface between the WASI USB API and a WASM module. Languages with support for the component model provide a way to generate bindings based on the WIT interface. These bindings are used to interact in a natural way with the WIT interface.
 
-The WASI USB API exposes a WIT interface which guest modules can use to communicate with it. Some parts of the USB WIT are described here.
+The WASI USB API exposes a WIT interface which guest modules can use to communicate with it. This section will highlight and explain the most important parts of the WIT interface.
 
 An important note is that in this chapter, `WIT interface' and `interface' will both be used, but have a different meaning.
 WIT interface refers to the whole WIT file.
 A WIT file itself also contains interfaces, which are also discussed here as interfaces. An interface can be thought of as an instance in the WebAssembly Component Model, for example a unit of functionality imported from the host or implemented by a component for consumption on a host. All functions and types belong to an interface. \footnote{https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md\#wit-interfaces}
 
-\inputminted{yaml}{wit/world.wit}
+\paragraph{World}
 
-The \texttt{imports} world is the main entrypoint of the interface. It imports 3 subsections of the interface: \texttt{types}, \texttt{descriptors} and \texttt{usb}. These are separate files with different parts of the interface. The world imports them so they are included in the interface.
+Each WIT interface contains one or multiple worlds. A world describes the collection of imports and exports of a component using the world. A world can import and export functions and interfaces. A world can also be a combination of multiple worlds. This is not used in the USB interface, so it won't be covered further.
+
+The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoint of the interface. It imports 3 subsections of the interface: \texttt{types}, \texttt{descriptors} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface.\\
+
+\begin{code}
+\inputminted{yaml}{wit/world.wit}
+\caption{USB World}
+\label{code:world}
+\end{code}
 
 % \section{WIT creation}
 % The WIT file provides the definition of the interface between the WASI USB API and a WASM module. Languages with support for the component model provide a way to generate bindings based on the WIT interface. These bindings are used to interact in a natural way with the WIT interface.

@@ -19,6 +19,7 @@
 \usepackage{subcaption}
 \usepackage[toc,page]{appendix}
 \usepackage{fontspec}
+\usepackage{listings}
 
 \usepackage{tikz}
 \usetikzlibrary{positioning, fit}
@@ -31,6 +32,8 @@
 \setlength{\cftsubsecindent}{0pt} % Remove indent for \subsection in Table of Contents
 \setlength{\cftfigindent}{0pt}    % remove indentation from figures in List of Figures
 \setlength{\cfttabindent}{0pt}    % remove indentation from tables in List of Tables
+
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true}
 
 \usepackage{parskip} % Add space between two paragraphs and don't indent the first line of the paragraph
 
@@ -57,7 +60,6 @@
 \usepackage[explicit, pagestyles]{titlesec}
 \titleformat{\chapter}[display]{\bfseries}{\color{chaptergrey}\fontfamily{pbk}\fontsize{80pt}{100pt}\selectfont\thechapter}{0pt}{\Huge #1}
 \titlespacing*{\chapter}{0pt}{-80pt}{30pt}
-
 
 % Header showing chapter number and title and footer showing page number
 \newpagestyle{fancy}{%
@@ -123,6 +125,8 @@
 %
 \input{personal_data}
 
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Source Code}
 
 %
 %  END OF HEADER
