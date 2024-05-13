@@ -1,1 +1,13 @@
 \chapter{Implementation}
+This chapter dives deeper into the internals of the API: how the runtime implementation works, how guests use the API, etc.
+
+\section{Runtime Implementation}
+One of the requirements when proposing a new \acrshort{WASI} \acrshort{API} is to have multiple runtime implementations of that \acrshort{API}. This is required in order to advance to phase 3 of a proposal. The \acrshort{USB} \acrshort{WASI} proposal is still at phase 1. However, having a working implementation of the developing \acrshort{API} makes it easier to test out ideas and spot issues quickly. It also is useful to determine the viablity of the \acrshort{API}. Therefore, a runtime implementation has been created before the proposal process has started.
+
+When creating the \acrshort{PoC} implementation, a \acrshort{Wasm} runtime must be chosen which will be extended by the \acrshort{API}. There are numerous \acrshort{Wasm} runtimes available, such as Wasmtime, Wasmer or WasmKit. Wasmtime was chosen for implementing the \acrshort{PoC}, as it has support for the Component Model and it is developed by the Bytecode Alliance, the organization behind \acrshort{WASI}.
+
+\subsection{Choosing the programming language}
+The implementation is written in Rust, a system-level programming langauge which focuses on performance and safety. Rust's performance is similar to that of C, but its design eliminates entire classes of memory related bugs. Rust was an easy choice, as it has great support for \acrshort{Wasm} and \acrshort{WASI}, and Wasmtime is also written in it.
+
+\subsection{Interfacing with LibUSB}
+As told in section ..., LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb package is used. Rust is a thin Rust wrapper around LibUSB, aligning the API with similar Rust APIs. For example, instead  
