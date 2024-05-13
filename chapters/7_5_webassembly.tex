@@ -121,21 +121,6 @@ record file {
 }
 \end{verbatim}
 
-\item \texttt{resource}: A resource is a reference to an object in another component. The resource contains functions that are callable upon the associated object. Calling a function on the resource is equivalent to calling a function on an existential type. An existential type implements the resource requirements, but the type is not known.
-
-In this example, the resource \texttt{file-handle} contains 4 functions. The \texttt{constructor} function will create a new instance of the type. The \texttt{default} function is a static function, meaning that it is not called on an instance. The other functions can be called on an instance of the type.
- 
-\begin{verbatim}
-resource file-handle {
-    constructor(file: file);
-    read(n: u32) -> result<list<u8>, handle-error>;
-    seek(offset: s32) -> u32;
-    write(data: list<u8>) -> result<_, handle-error>;
-    
-    default: static func() -> file-handle;
-}
-\end{verbatim}
-
 \item \texttt{flags}: The \texttt{flags} type is an efficient representation of multiple boolean values. It will use a bitset to represent the values.
 
 \begin{verbatim}
@@ -158,6 +143,48 @@ In this example, the function \texttt{lookup} takes parameters \texttt{store} of
 lookup: func(store: kv-store, key: string) -> option<string>;
 \end{verbatim}
 
+\paragraph{Resources}
+A resource is a handle to an object in another component. The resource contains functions that are callable upon the associated object. Calling a function on the resource is equivalent to calling a function on an existential type, a concept seen in other languages like Rust or Haskell \cite{haskell_existential}. An existential type implements the resource requirements, but the type is not known. This makes resources different from other WIT types: instead of passing data around, they allow components to \textit{access} objects from other components.
+
+In the example below, the resource \texttt{file-handle} contains 5 functions, which can be put into two categories:
+\begin{itemize}
+
+\item static functions: functions \texttt{constructor} and \texttt{default} are static functions. These do not have a reference to an instance of the resource, but are equivalent to regular functions, except that they are namespaced under \texttt{file-handle}. The \texttt{constructor} function will create a new instance of the type and is just syntactic sugar for a regular static function:
+\begin{verbatim}
+equiv-to-constructor: static func(file: file) -> file-handle
+\end{verbatim}
+
+\item instance functions: \texttt{read}, \texttt{seek} and \texttt{write} are instance functions and are called on an already-existing instance which conforms to the resource. An instance function can be desugared into
+\begin{verbatim}
+seek: func(self: borrow<file-handle>, offset: s32) -> u32;
+\end{verbatim}
+
+\end{itemize}
+
+ 
+\begin{verbatim}
+resource file-handle {
+    constructor(file: file);
+    read(n: u32) -> result<list<u8>, handle-error>;
+    seek(offset: s32) -> u32;
+    write(data: list<u8>) -> result<_, handle-error>;
+    
+    default: static func() -> file-handle;
+}
+\end{verbatim}
+
 
 \subsection{Milestones}
+\acrshort{WASI} is still in development and far from complete. In order to track the development of WASI, its creation has been split up in multiple milestones.
 
+\paragraph{Preview 1}
+\acrshort{WASI} Preview 1 was launched in 2019 and marked the first significant milestone in improving WebAssembly interaction outside the browser. Preview 1 contains methods to interact with the file system and command line, resembling a subset of the \acrfull{POSIX} interface. The API is offered to \acrshort{Wasm} modules via the witx \acrfull{IDL}.
+
+\paragraph{Preview 2}
+\acrshort{WASI} Preview 2 diverges from the classic \acrshort{POSIX} interface and introduced the Component Model. The Component Model fixes design issues and brings multiple improvements compared to a \acrshort{POSIX} interface, such as having to rely less on file descriptors and being able to use high-level value types instead of unstructured data \cite{path_to_components}. Existing APIs have been rebased to work with the \acrshort{WIT} language and the component model. Preview 2 is currently the latest preview.
+
+\paragraph{Preview 3}
+\acrshort{WASI} Preview 3 will bring smaller but important updates to the \acrshort{WIT} language. It is expected to introduce the \texttt{future} and \texttt{stream} keywords in the \acrshort{WIT} language, which adds the ability to express asynchronous functions in the interface. This will bring improvements to existing components which currently rely on polling.
+
+\paragraph{WASI 1.0}
+The main goal of \acrshort{WASI} 1.0 is to have a stable runtime which offers stable WIT interfaces to interact with various parts of the system, such as the filesystem. The most important proposals, such as \texttt{wasi-io} and \texttt{wasi-http}, must reach stage 5 of the standardization process \footnote{https://github.com/WebAssembly/WASI/blob/main/Proposals.md} before WASI 1.0 can be launched. 
