@@ -51,9 +51,7 @@ With the \acrshort{WIT}, components can expose a standardized interface to other
 \subsection{\acrfull{WIT}}
 \label{section:WIT}
 
-As briefly described in subsection \ref{section:thecomponentmodel}, the \acrfull{WIT} contains a definition of an interface a \acrshort{WASI} component exposes. It defines this interface in worlds and interfaces. The \acrshort{WIT} does not contain an implementation, but only defines the contract between components.
-
-Code block \ref{code:wit_example} shows an example wit file \cite{wit_example}. This paragraph will briefly discuss the basics of the \acrshort{WIT} language.
+As briefly described in subsection \ref{section:thecomponentmodel}, the \acrfull{WIT} contains a definition of an interface a \acrshort{WASI} component exposes. It defines this interface in worlds and interfaces. The \acrshort{WIT} does not contain an implementation, but only defines the contract between components. This subsection will briefly discuss the basics of the \acrshort{WIT} language.
 
 \paragraph{World}
 A world can be seen as the entrypoint of a component: it contains all the imports and exports of a component. Interfaces and functions can be imported and exported. Exports are what the component provides for other components. Imports are interfaces or functions the component requires. Imports may come from the component itself or from others. Finally, a world can also include another world, essentially being a superset of that world and using all its imports and exports.
