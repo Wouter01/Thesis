@@ -1,4 +1,5 @@
 \chapter{Implementation}
+\label{chapter:implementation}
 This chapter dives deeper into the internals of the API: how the runtime implementation works, how guests use the API, etc.
 
 \section{Runtime Implementation}
@@ -10,4 +11,101 @@ When creating the \acrshort{PoC} implementation, a \acrshort{Wasm} runtime must 
 The implementation is written in Rust, a system-level programming langauge which focuses on performance and safety. Rust's performance is similar to that of C, but its design eliminates entire classes of memory related bugs. Rust was an easy choice, as it has great support for \acrshort{Wasm} and \acrshort{WASI}, and Wasmtime is also written in it.
 
 \subsection{Interfacing with LibUSB}
-As told in section ..., LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb package is used. Rust is a thin Rust wrapper around LibUSB, aligning the API with similar Rust APIs. For example, instead  
+As told in section \ref{section:libusb}, LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb package is used, which acts as a thin Rust wrapper around the LibUSB C API.
+
+\subsection{Interfacing with Wasmtime}
+Wasmtime can be used in two ways: 
+\begin{itemize}
+\item Using the default Wasmtime runtime through the command line. A compiled \acrshort{Wasm} module can be passed as an argument:
+\begin{minted}{bash}
+$ wasmtime hello.wasm
+Hello, world!
+\end{minted}
+\item Embedding the Wasmtime runtime in another app. The Bytecode Alliance provides packages in multiple languages, such as Rust or Go, to do this \cite{wasmtime_website}. This is the method used for creating the \acrshort{PoC} and will be discussed further below.
+\end{itemize}
+
+As just discussed, the \acrshort{PoC} runtime will embed the Wasmtime runtime. The method of running will also be similar: a compiled \acrshort{Wasm} module is passed as a command line argument.
+
+Code snippet \ref{code:main} shows the main function of the runtime. The component at the given path will be instantiated and will start running. The main function is annotated with \texttt{\#[tokio::main]}, meaning that the asynchronous Tokio runtime \cite{tokio} will be used. Note that Tokio is an asynchronous runtime for Rust, and is not related to the Wasmtime runtime. The use of an asynchronous runtime is done for two reasons:
+\begin{itemize}
+\item The Wasmtime configuration in the runtime has enabled async support. At the time of writing, this isn't a really useful addition \cite{wasmtime_async_config}. However, this will become more useful once \acrshort{WASI} preview 3 lands, which will add proper async support to the \acrshort{WIT} language. Enabling async support now partially prepares for this upcoming feature.
+
+\item The runtime will receive updates when USB devices are connected and disconnected. This feature will run blocking functions which will be ran on a separate thread. Tokio makes this easy to do.
+\end{itemize}
+
+
+\begin{code}
+\begin{minted}[tabsize=4]{rust}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+	let parsed = UsbDemoAppParser::parse();
+	let mut app = UsbDemoApp::new(parsed.component_path)?;
+
+	app
+		.start()
+		.await?
+		.map_err(|e| anyhow!(e))
+}
+\end{minted}
+\caption{The main function will start running the guest component}
+\label{code:main}
+\end{code}
+
+Code snippet \ref{code:start_component} shows how the passed in component will get instantiated. The \texttt{main} function will first call the \texttt{new} function. This function will create some necessary objects: 
+\begin{itemize}
+\item \texttt{Config}: The configuration for a new \texttt{Engine}.
+\item \texttt{Engine}: An engine will manage and compile Wasm modules.
+\item \texttt{Linker}: A linker is used to link components. Each component will define imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
+\end{itemize}
+
+Next, the built-in components will be added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} will add all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} will link the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
+
+The \texttt{start} function will create a new \texttt{Store} object. This object is associated with the earlier created engine, and will contain the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created and the \texttt{run} function is called. The guest component exposes this \texttt{run} function. This acts like a \texttt{main} function and is the entrypoint of the app.
+
+\begin{code}
+\begin{minted}[tabsize=4]{rust}
+struct UsbDemoApp {
+	engine: Engine,
+	linker: Linker<USBHostWasiView>,
+	component: Component
+}
+
+impl UsbDemoApp {
+	fn new(component: PathBuf) -> Result<Self> {
+		let mut config = Config::default();
+		config.wasm_component_model(true);
+		config.async_support(true);
+
+		let engine = Engine::new(&config)?;
+		let mut linker = Linker::new(&engine);
+
+		wasmtime_wasi::add_to_linker_async(&mut linker)?;
+		Imports::add_to_linker(&mut linker, |view| view)?;
+		
+		let component = Component::from_file(&engine, component)?;
+
+		Ok(Self {
+			engine,
+			linker,
+			component
+		})
+	}
+
+	async fn start(&mut self) -> anyhow::Result<Result<(), String>> {
+		let data = USBHostWasiView::new()?;
+		let mut store = Store::new(&self.engine, data);
+
+		self
+			.linker
+			.instantiate_async(&mut store, &self.component).await?
+			.get_typed_func::<(), (Result<(), String>,)>(&mut store, "run")?
+			.call_async(&mut store, ())
+			.await
+			.map(|result| result.0)
+	}
+}
+\end{minted} 
+\caption{Code for extending the Wasmtime runtime}
+\label{code:start_component}
+\end{code}

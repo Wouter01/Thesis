@@ -15,14 +15,14 @@ The program will now try reading the controller state. This way, it knows about 
 Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample controller state output is showed in Figure \ref{fig:wasi_controller_sample_output}.
 
 \begin{figure}[h]
-\begin{minted}{python}
+\begin{verbatim}
 dpad: ,
 buttons: assistant_button|l2_button|r2_button,
 left stick: x: 128 y: 128,
 right stick: x: 128 y: 128,
 l2: 255,
 r2: 172
-\end{minted}
+\end{verbatim}
 \caption{Reading controller state}
 \label{fig:wasi_controller_sample_output}
 \end{figure}
