@@ -17,8 +17,8 @@ To be able to move to phase 2, the requirements for phase 1 are worked out:
 \item Prototype implementations are required to evaluate the viability of the created API.
 \item The portability criteria are defined:
 \begin{itemize}
-\item Portability: On which platforms should the API run, what parts of the API are available on which platform
-\item Practicality: The proposal should demonstrate that the API can be used in real-world scenarios
+\item Portability: On which platforms should the API run, what parts of the API are available on which platform.
+\item Practicality: The proposal should demonstrate that the API can be used in real-world scenarios.
 \item Testing: Define how the API should be tested and on which devices.
 \item Implementations: In Phase 3, each proposal should have at least two implementations in different WASI runtimes. The kinds of implementations are defined here.
 \end{itemize}
@@ -42,8 +42,130 @@ No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not 
 A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here} \footnote{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}.
 
 \section{USB Proposal}
-The \texttt{wasi-usb} repository \cite{wasi_usb} has been created and contains the contents of the proposal to standardize an USB interface.
+The \texttt{wasi-usb} repository \cite{wasi_usb} has been created and contains the contents of the proposal to standardize the USB interface. The proposal contains a draft of the \acrshort{WIT} interface of the USB API. This section will highlight the important parts of the API.
+
+An important note is that in this chapter, `WIT interface' and `interface' will both be used, but have a different meaning.
+WIT interface refers to the whole WIT file.
+A WIT file itself also contains interfaces, which are also discussed here as interfaces. An interface can be thought of as an instance in the WebAssembly Component Model, for example a unit of functionality imported from the host or implemented by a component for consumption on a host. All functions and types belong to an interface. \footnote{https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md\#wit-interfaces}
+
+\paragraph{\texttt{imports} World}
+The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoint of the interface. It imports 4 interfaces: \texttt{types}, \texttt{descriptors}, \texttt{events} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface. The world will also export these interfaces, making them available for components that use the \texttt{imports} world.\\
+
+\begin{code}
+\begin{verbatim}
+package component:usb@0.2.0;
+
+world imports {
+	import types;
+	import descriptors;
+	import events;
+	import usb;
+
+	export types;
+	export descriptors;
+	export events;
+	export usb;
+}
+\end{verbatim}
+\caption{\texttt{imports} World}
+\label{code:world}
+\end{code}
+
+\paragraph{\texttt{usb} interface}
+The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device-handle}. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other 3 methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive API, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
+
+The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, 
+
+\begin{code}
+\begin{verbatim}
+package component:usb@0.2.0;
+
+interface usb {
+	use types.{device-handle-error};
+	use descriptors.{configuration-descriptor, device-descriptor};
+
+	resource usb-device {
+		// Get a list of all configurations of the USB device.
+		configurations: func() -> 
+			result<list<configuration-descriptor>, device-handle-error>;
+
+		device-descriptor: func() -> device-descriptor;
+
+		// Open the device. If successfull, this will return 
+		// a device handle which can be used to interact with the device.
+		open: func() -> result<device-handle, device-handle-error>;
+
+		// Get a list of all USB devices the guest is allowed to access.
+		enumerate: static func() -> list<usb-device>;
+	}
+
+	resource device-handle {
+		reset: func();
+		active-configuration: func() -> result<u8, device-handle-error>;
+
+		select-configuration: func(configuration: u8);
+
+		// **Interfaces**
+
+		// Claim an interface.
+		// Claiming an interface can fail.
+		// For example, the operating system might not allow claiming the interface.
+		claim-interface: func(%interface: u8) -> result<_, device-handle-error>;
+
+		// Release an interface.
+		release-interface: func(%interface: u8);
+
+		// Select an alternate interface.
+		select-alternate-interface: func(%interface: u8, setting: u8) -> 
+			result<_, device-handle-error>;
+
+		// **Reading & Writing**
+
+		read-interrupt: func(endpoint: u8) -> 
+			result<tuple<u64, list<u8>>, device-handle-error>;
+			
+		write-interrupt: func(endpoint: u8, data: list<u8>) -> 
+			result<u64, device-handle-error>;
+
+		read-bulk: func(endpoint: u8, max-size: u16) -> 
+			result<tuple<u64, list<u8>>, device-handle-error>;
+			
+		write-bulk: func(endpoint: u8, data: list<u8>) -> 
+			result<u64, device-handle-error>;
+
+		read-isochronous: func(endpoint: u8) -> 
+			result<tuple<u64, list<u8>>, device-handle-error>;
+			
+		write-isochronous: func(endpoint: u8, data: list<u8>) -> 
+			result<u64, device-handle-error>;
+
+		read-control: func(request-type: u8, request: u8, value: u16, 
+			index: u16, max-size: u16) -> result<tuple<u64, list<u8>>, device-handle-error>;
+			
+		write-control: func(request-type: u8, request: u8, value: u16, 
+			index: u16, buf: list<u8>) -> result<u64, device-handle-error>;
+	}
+}
+\end{verbatim}
+\caption{\texttt{usb} interface}
+\label{code:usb_interface}
+\end{code}
+
+\section{Capability-based security}
 
 \section{Timeline}
 
-
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l|p{12cm}}
+		\toprule
+		\textbf{Date} & \textbf{Event} \\
+		\midrule
+		29 November 2023 & An issue \cite{wasi_issue_570} was created on the WASI repository, stating the interest in creating an USB proposal. Proposal is at phase 0. \\
+		5 March 2024 & Initial WIT for proposal created with Warre \\
+		4 April 2024 & Presentation \cite{wasi_meeting_notes} of proposal in WASI meeting. Proposal has moved to phase 1 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Timeline of Events Related to the USB Proposal in the WASI Repository}
+	\label{tab:wasi_usb_proposal}
+\end{table}
