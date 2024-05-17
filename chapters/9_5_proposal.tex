@@ -70,7 +70,9 @@ The \texttt{device-handle} resource will contain all the functions which require
 
 \paragraph{\texttt{events} interface}
 
-Code snippet \ref{code:events_interface} shows the \texttt{events} interface. This interface allows a guest to poll for connection event updates. This way, a guest can know when a device gets connected or disconnected and act appropriately.
+Code snippet \ref{code:events_interface} shows the \texttt{events} interface. This interface allows a guest to poll for connection event updates. This way, a guest can know when a device gets connected or disconnected and act appropriately. It only contains a single function, \texttt{update}. As the name implies, this function will return a \texttt{device-connection-event}. When no update is available, the \texttt{pending} case will be returned.
+
+When \acrshort{WASI} Preview 3 brings async support, the \texttt{update} function can be adjusted so it can get updates via a stream instead of polling.
 
 \begin{code}
 \inputminted[breaklines]{text}{WIT/wit/events.wit}
@@ -79,9 +81,37 @@ Code snippet \ref{code:events_interface} shows the \texttt{events} interface. Th
 \end{code}
 
 \section{Capability-based security}
-Events filter, enumerate filter
+One of the strenghts of \acrshort{WASI} is the capability-based security mechanism it brings. This mechanism allows granular control of what resources an application is allowed to access. For example, the \acrshort{WASI} filesystem APIs apply capability-based security, so applications only have access to files and directories they have been given access to \cite{wasi_security}.
+
+The \acrshort{USB} proposal aims to add a similar security model for accessing USB devices. This idea can be applied at various levels:
+\begin{itemize}
+\item Device-level
+\item Configuration-level
+\item Interface-level
+\item Endpoint-level
+\end{itemize}
+
+The current proposal draft only applies this security model at the \textbf{device-level}. This option is the most obvious one, and is similar to the way WebUSB protects devices \cite{webusb_security}. Applying the security model to the other 3 levels is possible, but it is not known if this would provide any benefits, as no use cases were found were these were deemed useful. Therefore, these levels have been left out of the security model.
+
+\subsection{Implementation Considerations}
+When implementing the security model at a device-level, the \acrshort{Wasm} runtime should take following measures:
+\begin{itemize}
+\item Extend runtime parameters so users can add allowed devices. These devices would likely be matched against a manufacturer and product ID pair. If proven useful, an extra parameter can also be provided to use a blacklist instead of a whitelist. This way, the user can provide which devices cannot be accessed.
+\item Change the \texttt{usb.\{usb-device/enumerate\}} function implementation, so that it filters out all non-allowed devices.
+\item Change the \texttt{events.\{update\}} function implementation, so it does not give update events about non-allowed devices.
+\end{itemize}
+
+If the security model would be applied to any of the three other levels, modification of the \texttt{device-handle} resource will be needed, as certain parameters will not be allowed anymore. For example, the \texttt{select-configuration} function accepts any configuration number, while some configurations might not be allowed by the security model. To solve this issue, two solutions are possible:
+
+\begin{itemize}
+\item All permission-sensitive functions can throw errors when illegal numbers are passed.
+\item Resources are used instead of numbers to represent configurations, interfaces and endpoints.
+\end{itemize}
+
+The second option would create a more intuitive API, as less errors can be thrown. Instead of passing an arbitrary number, a resource can be passed. This resource can only be created by the host runtime implementation, so the guest cannot pass a resource it does not have access to. A downside of this approach would be that it differs more from the simplicity of the \textit{classic} \acrshort{USB} \acrshort{API}.
 
 \section{Timeline}
+Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened during the year regarding the proposal.
 
 \begin{table}[h]
 	\centering
@@ -90,13 +120,10 @@ Events filter, enumerate filter
 		\textbf{Date} & \textbf{Event} \\
 		\midrule
 		29 November 2023 & An issue \cite{wasi_issue_570} was created on the WASI repository, stating the interest in creating an USB proposal. Proposal is at phase 0. \\
-		5 March 2024 & Initial WIT for proposal created with Warre \\
+		5 March 2024 & Initial WIT for proposal created\\
 		4 April 2024 & Presentation \cite{wasi_meeting_notes} of proposal in WASI meeting. Proposal has moved to phase 1 \\
 		\bottomrule
 	\end{tabular}
 	\caption{Timeline of Events Related to the USB Proposal in the WASI Repository}
 	\label{tab:wasi_usb_proposal}
 \end{table}
-
-\section{Open Questions}
-Most of these functions have parameters for specifying an identifier for an interface, endpoint, etc. At the moment, these are passed in as numbers. In theory, someone can pass a number that is not intended. This can 
