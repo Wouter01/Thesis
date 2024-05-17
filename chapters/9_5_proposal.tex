@@ -52,21 +52,7 @@ A WIT file itself also contains interfaces, which are also discussed here as int
 The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoint of the interface. It imports 4 interfaces: \texttt{types}, \texttt{descriptors}, \texttt{events} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface. The world will also export these interfaces, making them available for components that use the \texttt{imports} world.\\
 
 \begin{code}
-\begin{verbatim}
-package component:usb@0.2.0;
-
-world imports {
-	import types;
-	import descriptors;
-	import events;
-	import usb;
-
-	export types;
-	export descriptors;
-	export events;
-	export usb;
-}
-\end{verbatim}
+\inputminted[breaklines]{text}{WIT/wit/world.wit}
 \caption{\texttt{imports} World}
 \label{code:world}
 \end{code}
@@ -74,84 +60,26 @@ world imports {
 \paragraph{\texttt{usb} interface}
 The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device-handle}. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other 3 methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive API, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
 
-The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, 
+The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types: \texttt{read-interrupt}, \texttt{write-interrupt}, etc. All functions in \texttt{device-handle} are closely related to similar LibUSB functions \cite{libusb_docs}. 
 
 \begin{code}
-\begin{verbatim}
-package component:usb@0.2.0;
-
-interface usb {
-	use types.{device-handle-error};
-	use descriptors.{configuration-descriptor, device-descriptor};
-
-	resource usb-device {
-		// Get a list of all configurations of the USB device.
-		configurations: func() -> 
-			result<list<configuration-descriptor>, device-handle-error>;
-
-		device-descriptor: func() -> device-descriptor;
-
-		// Open the device. If successfull, this will return 
-		// a device handle which can be used to interact with the device.
-		open: func() -> result<device-handle, device-handle-error>;
-
-		// Get a list of all USB devices the guest is allowed to access.
-		enumerate: static func() -> list<usb-device>;
-	}
-
-	resource device-handle {
-		reset: func();
-		active-configuration: func() -> result<u8, device-handle-error>;
-
-		select-configuration: func(configuration: u8);
-
-		// **Interfaces**
-
-		// Claim an interface.
-		// Claiming an interface can fail.
-		// For example, the operating system might not allow claiming the interface.
-		claim-interface: func(%interface: u8) -> result<_, device-handle-error>;
-
-		// Release an interface.
-		release-interface: func(%interface: u8);
-
-		// Select an alternate interface.
-		select-alternate-interface: func(%interface: u8, setting: u8) -> 
-			result<_, device-handle-error>;
-
-		// **Reading & Writing**
-
-		read-interrupt: func(endpoint: u8) -> 
-			result<tuple<u64, list<u8>>, device-handle-error>;
-			
-		write-interrupt: func(endpoint: u8, data: list<u8>) -> 
-			result<u64, device-handle-error>;
-
-		read-bulk: func(endpoint: u8, max-size: u16) -> 
-			result<tuple<u64, list<u8>>, device-handle-error>;
-			
-		write-bulk: func(endpoint: u8, data: list<u8>) -> 
-			result<u64, device-handle-error>;
-
-		read-isochronous: func(endpoint: u8) -> 
-			result<tuple<u64, list<u8>>, device-handle-error>;
-			
-		write-isochronous: func(endpoint: u8, data: list<u8>) -> 
-			result<u64, device-handle-error>;
-
-		read-control: func(request-type: u8, request: u8, value: u16, 
-			index: u16, max-size: u16) -> result<tuple<u64, list<u8>>, device-handle-error>;
-			
-		write-control: func(request-type: u8, request: u8, value: u16, 
-			index: u16, buf: list<u8>) -> result<u64, device-handle-error>;
-	}
-}
-\end{verbatim}
+\inputminted[breaklines]{text}{WIT/wit/device.wit}
 \caption{\texttt{usb} interface}
 \label{code:usb_interface}
 \end{code}
 
+\paragraph{\texttt{events} interface}
+
+Code snippet \ref{code:events_interface} shows the \texttt{events} interface. This interface allows a guest to poll for connection event updates. This way, a guest can know when a device gets connected or disconnected and act appropriately.
+
+\begin{code}
+\inputminted[breaklines]{text}{WIT/wit/events.wit}
+\caption{\texttt{events} interface}
+\label{code:events_interface}
+\end{code}
+
 \section{Capability-based security}
+Events filter, enumerate filter
 
 \section{Timeline}
 
@@ -169,3 +97,6 @@ interface usb {
 	\caption{Timeline of Events Related to the USB Proposal in the WASI Repository}
 	\label{tab:wasi_usb_proposal}
 \end{table}
+
+\section{Open Questions}
+Most of these functions have parameters for specifying an identifier for an interface, endpoint, etc. At the moment, these are passed in as numbers. In theory, someone can pass a number that is not intended. This can 
