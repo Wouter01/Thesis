@@ -53,9 +53,13 @@ async fn main() -> Result<()> {
 
 Code snippet \ref{code:start_component} shows how the passed in component will get instantiated. The \texttt{main} function first calls the \texttt{new} function. This function creates some necessary objects: 
 \begin{itemize}
-\item \texttt{Config}: The configuration for a new \texttt{Engine}.
+\item \texttt{Config}: The configuration used when creating a new \texttt{Engine}.
 \item \texttt{Engine}: An engine manages and compiles Wasm modules.
 \item \texttt{Linker}: A linker is used to link components. Each component defines imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
+\item \texttt{Component}: Used to represent a \acrshort{WASI} component.
+\item \texttt{Store}: `A Store is a collection of WebAssembly instances and host-defined state.
+
+All WebAssembly instances and items will be attached to and refer to a Store. For example instances, functions, globals, and tables are all attached to a Store. Instances are created by instantiating a Module within a Store.' \cite{wasmtime_store}
 \end{itemize}
 
 Next, the built-in components are added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} adds all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} links the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
@@ -167,3 +171,28 @@ pub struct DeviceHandle {
 \label{code:conforming_example}
 \end{code}
 
+\subsection{Conforming to constraints}
+Section \ref{section:capability_based_security} and \ref{section:usage_in_multiple_components} mention important constraints regarding the correct implementation of the API. The implementation conforms to these constraints:
+
+
+\paragraph{Usage in multiple components} Exclusive access to devices is guaranteed by keeping track of the device handles. Only one \texttt{device-handle} instance may exist for each \acrshort{USB} device. \texttt{USBHostWastView} stores a set of device addresses for devices with an active \texttt{device-handle}. It does not keep track of which component uses which device. When an \texttt{device-handle} gets dropped, the device address is removed from the set and becomes available again. When a component tries opening an already-opened device, an error will be thrown. 
+
+\subsection{Platform limitations}
+The current host implementation works on Linux, macOS and Windows. However, some features work slightly different on some platforms:
+
+\begin{itemize}
+\item macOS: 
+\begin{itemize}
+\item Using devices for which the kernel provides drivers is disallowed, unless the program has elevated privileges, for example using \texttt{sudo} \cite{libusb_macos_limitations}.
+\end{itemize}
+
+\item Windows:
+\begin{itemize}
+\item LibUSB hotplug support is currently missing for Windows. This feature is used in the implementation to get device connection events. Recent activity shows that this might come soon \cite{libusb_hotplug_support}
+\item HID keyboards and mice cannot be accessed using the native HID driver as Windows reserves exclusive access to them. \cite{libusb_windows_limitations}
+\end{itemize}
+\end{itemize}
+
+
+
+\section{Usage in guest components}
