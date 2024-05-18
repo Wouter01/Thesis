@@ -21,22 +21,21 @@ Wasmtime can be used in two ways:
 $ wasmtime hello.wasm
 Hello, world!
 \end{minted}
-\item Embedding the Wasmtime runtime in another app. The Bytecode Alliance provides packages in multiple languages, such as Rust or Go, to do this \cite{wasmtime_website}. This is the method used for creating the \acrshort{PoC} and will be discussed further below.
+\item Embedding the Wasmtime runtime in another app. The Bytecode Alliance provides packages in multiple languages, such as Rust or Go, to do this \cite{wasmtime_website}. This is the method used for creating the \acrshort{PoC} and is discussed further below.
 \end{itemize}
 
-As just discussed, the \acrshort{PoC} runtime will embed the Wasmtime runtime. The method of running will also be similar: a compiled \acrshort{Wasm} module is passed as a command line argument.
+The \acrshort{PoC} runtime embeds the Wasmtime runtime. The method of running is also similar: a compiled \acrshort{Wasm} module is passed as a command line argument.
 
 Code snippet \ref{code:main} shows the main function of the runtime. The component at the given path will be instantiated and will start running. The main function is annotated with \texttt{\#[tokio::main]}, meaning that the asynchronous Tokio runtime \cite{tokio} will be used. Note that Tokio is an asynchronous runtime for Rust, and is not related to the Wasmtime runtime. The use of an asynchronous runtime is done for two reasons:
 \begin{itemize}
 \item The Wasmtime configuration in the runtime has enabled async support. At the time of writing, this isn't a really useful addition \cite{wasmtime_async_config}. However, this will become more useful once \acrshort{WASI} preview 3 lands, which will add proper async support to the \acrshort{WIT} language. Enabling async support now partially prepares for this upcoming feature.
 
-\item The runtime will receive updates when USB devices are connected and disconnected. This feature will run blocking functions which will be ran on a separate thread. Tokio makes this easy to do.
+\item The runtime receives updates when USB devices are connected and disconnected. This feature runs blocking functions which run on a separate thread. Tokio makes this easy to do.
 \end{itemize}
 
 
 \begin{code}
 \begin{minted}[tabsize=4]{rust}
-
 #[tokio::main]
 async fn main() -> Result<()> {
 	let parsed = UsbDemoAppParser::parse();
@@ -52,19 +51,19 @@ async fn main() -> Result<()> {
 \label{code:main}
 \end{code}
 
-Code snippet \ref{code:start_component} shows how the passed in component will get instantiated. The \texttt{main} function will first call the \texttt{new} function. This function will create some necessary objects: 
+Code snippet \ref{code:start_component} shows how the passed in component will get instantiated. The \texttt{main} function first calls the \texttt{new} function. This function creates some necessary objects: 
 \begin{itemize}
 \item \texttt{Config}: The configuration for a new \texttt{Engine}.
-\item \texttt{Engine}: An engine will manage and compile Wasm modules.
-\item \texttt{Linker}: A linker is used to link components. Each component will define imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
+\item \texttt{Engine}: An engine manages and compiles Wasm modules.
+\item \texttt{Linker}: A linker is used to link components. Each component defines imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
 \end{itemize}
 
-Next, the built-in components will be added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} will add all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} will link the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
+Next, the built-in components are added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} adds all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} links the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
 
-The \texttt{start} function will create a new \texttt{Store} object. This object is associated with the earlier created engine, and will contain the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created and the \texttt{run} function is called. The guest component exposes this \texttt{run} function. This acts like a \texttt{main} function and is the entrypoint of the app.
+The \texttt{start} function creates a new \texttt{Store} object. This object is associated with the earlier created engine, and contains the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created and the \texttt{run} function is called. The guest component exposes this \texttt{run} function. \texttt{run} acts like a \texttt{main} function and is the entrypoint of the app.\\
 
 \begin{code}
-\begin{minted}[tabsize=4]{rust}
+\begin{minted}[tabsize=4, breaklines]{rust}
 struct UsbDemoApp {
 	engine: Engine,
 	linker: Linker<USBHostWasiView>,
@@ -109,3 +108,62 @@ impl UsbDemoApp {
 \caption{Code for extending the Wasmtime runtime}
 \label{code:start_component}
 \end{code}
+
+\subsection{Conforming to the \acrshort{WIT} interface}
+The runtime must conform to the \acrshort{WIT} interface described in section \ref{section:usb_proposal}. This part of the code \textit{receives} requests from guest components using the interface. The communication between the host and a component happens through the canonical ABI. As discussed in section \ref{section:thecomponentmodel}, bindings can be used to ease the translation from and to the canonical ABI format. Wasmtime offers the \texttt{bindgen} macro \cite{wasmtime_component_bindgen} to generate such bindings in Rust.
+
+The usage of the \texttt{bindgen} macro is shown in code snippet \ref{code:wit_bindgen}.
+This macro will generate Rust types and traits that represent their \acrshort{WIT} counterparts. The host must conform to all these traits. Otherwise, adding the \acrshort{USB} \acrshort{WIT} interface to the linker will be disallowed.
+
+The \texttt{with} map shown in code snippet \ref{code:wit_bindgen} is used to point the \texttt{bindgen} tool to the Rust types we want to use to represent the \texttt{usb-device} and \texttt{device-handle} resources. The \texttt{bindgen} macro will use these types in the generated traits.
+
+\begin{code}
+\begin{minted}[tabsize=4, breaklines]{rust}
+pub mod bindings {
+	wasmtime::component::bindgen!({
+		world: "component:usb/imports",
+		async: true,
+		with: {
+			"component:usb/usb/usb-device": crate::device::usbdevice::USBDevice,
+			"component:usb/usb/device-handle": crate::device::devicehandle::DeviceHandle,
+		},
+		path: "../WIT/wit"
+	});
+}
+\end{minted} 
+\caption{Bindings are generated by using the Wasmtime \texttt{bindgen} macro}
+\label{code:wit_bindgen}
+\end{code}
+
+Code snippet \ref{code:conforming_example} shows an example usage of the generated bindings:
+\begin{itemize}
+\item \textbf{\texttt{USBHostWasiView}} is the type that implements the \acrshort{USB} \acrshort{WIT} interface. An instance of this type is passed to the linker to represent the \acrshort{USB} interface. The type checker verifies that \texttt{USBHostWasiView} conforms to all the required traits.
+\item \textbf{\texttt{HostDeviceHandle}} is the trait generated by the bindings. It contains functions which \texttt{USBHostWasiView} needs to conform to.
+\item \textbf{\texttt{Resource<DeviceHandle>}} is a reference to an \texttt{DeviceHandle} instance. 
+\end{itemize}
+
+\texttt{DeviceHandle} has a handle that is used to call LibUSB functions. In this example, the \texttt{claim\_interface} function will call the equivalent LibUSB function and return its result.\\
+
+\begin{code}
+\begin{minted}[tabsize=4, breaklines]{rust}
+#[async_trait]
+impl HostDeviceHandle for USBHostWasiView {
+	async fn claim_interface(&mut self, handle: Resource<DeviceHandle>, interface: u8) -> Result<Result<(), DeviceHandleError>> {
+		let result = self.table()
+			.get_mut(&handle)?
+			.handle
+			.claim_interface(interface)
+			.map_err(|e| e.into());
+	
+		Ok(result)
+	}
+}
+
+pub struct DeviceHandle {
+	pub handle: rusb::DeviceHandle<rusb::Context>
+}
+\end{minted} 
+\caption{An example of using generated bindings. An implementation for \texttt{claim-interface} is provided.}
+\label{code:conforming_example}
+\end{code}
+
