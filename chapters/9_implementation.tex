@@ -1,6 +1,29 @@
 \chapter{Implementation}
 \label{chapter:implementation}
-This chapter dives deeper into the internals of the API: how the runtime implementation works, how guests use the API, etc.
+This chapter dives deeper into the internals of the API. First, an overview will be given of how a typical series of calls works under the hood. Next, the runtime implementation will be discussed. At last, using the \acrshort{API} in a guest component will be explained.
+
+\section{Overview}
+
+Figure \ref{fig:implementation_overview} shows the series of calls that happen in a typical, albeit small, use case of the API. The program functionality is the following:
+\begin{enumerate}
+\item Get all devices.
+\item Find the device needed.
+\item Open the device and select the right configuration / interface.
+\item Read data from the device.
+\item Close the device.
+\end{enumerate}
+
+Under the hood a lot more is happening, which can be seen in the figure. Most calls can be forwarded to LibUSB, which will handle OS-specific behaviour. Some steps, like opening a device, require some extra work in the runtime.
+
+On the left side of the figure are the function calls to LibUSB shown. On the right side are the calls shown from and to the \acrshort{Wasm} guest. The function names are of the format \texttt{wit\_interface.\{function\_name\_in\_interface\}}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/sequentiediagram.png}
+  \caption{Typical series of events sent between Wasm module - Wasmtime - LibUSB}
+  \label{fig:implementation_overview}
+\end{figure}
+
 
 \section{Runtime Implementation}
 One of the requirements when proposing a new \acrshort{WASI} \acrshort{API} is to have multiple runtime implementations of that \acrshort{API}. This is required in order to advance to phase 3 of a proposal. The \acrshort{USB} \acrshort{WASI} proposal is still at phase 1. However, having a working implementation of the developing \acrshort{API} makes it easier to test out ideas and spot issues quickly. It also is useful to determine the viablity of the \acrshort{API}. Therefore, a runtime implementation has been created before the proposal process has started.
