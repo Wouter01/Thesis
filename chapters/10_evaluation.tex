@@ -1,6 +1,7 @@
 \chapter{Evaluation}
 
 \section{Functional Evaluation}
+\label{section:functional_evaluation}
 When developing the API, it is useful to already have guest code utilizing the API to quickly iterate. The following proof of concept is one of the guest programs created to test the API. It touches on all the parts of the API: getting device updates and receiving and sending data through the USB interface. As it is a proof of concept, it does not test the performance of the API.
 
 The general idea of the program is to control a game controller. The program is started and observes the connected devices. Once a controller is connected that is recognized by the program, the program will connect to the controller. The state of all the controls of the device will be read, and input updates will be print out. To test sending data over the USB interface, the program will send commands to the controller to activate the rumble motors \footnote{Rumble motors are used to vibrate the controller}.
@@ -24,7 +25,7 @@ right stick: x: 128 y: 128,
 l2: 255,
 r2: 172
 \end{verbatim}
-\caption{Reading controller state}
+\caption{Output after reading controller state}
 \label{code:wasi_controller_sample_output}
 \end{code}
 

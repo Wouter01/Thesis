@@ -30,7 +30,7 @@ Code snippet \ref{code:main} shows the main function of the runtime. The compone
 \begin{itemize}
 \item The Wasmtime configuration in the runtime has enabled async support. At the time of writing, this isn't a really useful addition \cite{wasmtime_async_config}. However, this will become more useful once \acrshort{WASI} preview 3 lands, which will add proper async support to the \acrshort{WIT} language. Enabling async support now partially prepares for this upcoming feature.
 
-\item The runtime receives updates when USB devices are connected and disconnected. This feature runs blocking functions which run on a separate thread. Tokio makes this easy to do.
+\item The runtime receives updates when USB devices are connected and disconnected. This feature runs blocking functions which run on a separate thread. Tokio makes this easy to do.\\
 \end{itemize}
 
 
@@ -41,10 +41,8 @@ async fn main() -> Result<()> {
 	let parsed = UsbDemoAppParser::parse();
 	let mut app = UsbDemoApp::new(parsed.component_path)?;
 
-	app
-		.start()
-		.await?
-		.map_err(|e| anyhow!(e))
+	app.start().await?
+		.map_err(|_| anyhow!("Failed to run component."))
 }
 \end{minted}
 \caption{The main function will start running the guest component}
@@ -64,7 +62,7 @@ All WebAssembly instances and items will be attached to and refer to a Store. Fo
 
 Next, the built-in components are added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} adds all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} links the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
 
-The \texttt{start} function creates a new \texttt{Store} object. This object is associated with the earlier created engine, and contains the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created and the \texttt{run} function is called. The guest component exposes this \texttt{run} function. \texttt{run} acts like a \texttt{main} function and is the entrypoint of the app.\\
+The \texttt{start} function creates a new \texttt{Store} object. This object is associated with the earlier created engine, and contains the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created. We assume that the component is a \texttt{Command} (\ref{section:component_kinds}) and therefore exposes a \texttt{main} function. The \texttt{main} function, in \acrshort{WASI} terms also known as the \texttt{\_start} function, gets called.
 
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}
@@ -95,17 +93,13 @@ impl UsbDemoApp {
 		})
 	}
 
-	async fn start(&mut self) -> anyhow::Result<Result<(), String>> {
+	async fn start(&mut self) -> anyhow::Result<Result<(), ()>> {
 		let data = USBHostWasiView::new()?;
 		let mut store = Store::new(&self.engine, data);
-
-		self
-			.linker
-			.instantiate_async(&mut store, &self.component).await?
-			.get_typed_func::<(), (Result<(), String>,)>(&mut store, "run")?
-			.call_async(&mut store, ())
-			.await
-			.map(|result| result.0)
+	
+		let (command, _) = Command::instantiate_async(&mut store, &self.component, &self.linker).await?;
+	
+		command.wasi_cli_run().call_run(store).await
 	}
 }
 \end{minted} 
@@ -174,6 +168,7 @@ pub struct DeviceHandle {
 \subsection{Conforming to constraints}
 Section \ref{section:capability_based_security} and \ref{section:usage_in_multiple_components} mention important constraints regarding the correct implementation of the API. The implementation conforms to these constraints:
 
+\paragraph{Capability-based security}
 
 \paragraph{Usage in multiple components} Exclusive access to devices is guaranteed by keeping track of the device handles. Only one \texttt{device-handle} instance may exist for each \acrshort{USB} device. \texttt{USBHostWastView} stores a set of device addresses for devices with an active \texttt{device-handle}. It does not keep track of which component uses which device. When an \texttt{device-handle} gets dropped, the device address is removed from the set and becomes available again. When a component tries opening an already-opened device, an error will be thrown. 
 
@@ -193,6 +188,71 @@ The current host implementation works on Linux, macOS and Windows. However, some
 \end{itemize}
 \end{itemize}
 
-
-
 \section{Usage in guest components}
+This section demonstrates how a \acrshort{WASI} component can use the \acrshort{USB} \acrshort{API}. Parts of the code used for the program in section \ref{section:functional_evaluation} will be explained.
+
+\subsection{Defining a \acrshort{WIT} interface}
+The guest component is required to also provide a \acrshort{WIT} interface, shown in code snippet \ref{code:guest_world}. The interface contains a single \texttt{root} world, describing the imports and exports required by the component. The guest component explained here is a Command component (\ref{section:component_kinds}), and therefore does not provide any exports. In order to use the \acrshort{USB} \acrshort{API}, it will import all the interfaces of the \acrshort{USB} component.\\
+
+\begin{code}
+\begin{minted}[tabsize=4, breaklines]{rust}
+package component:usb-component-wasi-stadia;
+
+world root {
+	import component:usb/types@0.2.0;
+	import component:usb/usb@0.2.0;
+	import component:usb/events@0.2.0;
+	import component:usb/descriptors@0.2.0;
+}
+\end{minted} 
+\caption{The \acrshort{WIT} world for the guest component}
+\label{code:guest_world}
+\end{code}
+
+\subsection{Creating a \acrshort{Wasm} module}
+The code written for the guest component must be compiled to a .wasm file. Doing this can be time consuming, as multiple steps are required:
+
+\begin{enumerate}
+\item Create bindings.
+\item Build a \acrshort{Wasm} module.
+\item Create a new \acrshort{WASI} component and apply the adapter for \acrshort{WASI} preview 2.
+\end{enumerate}
+
+In order to ease this process, the Cargo-component tool \cite{cargo_component} was created. By running
+\begin{verbatim}
+cargo component build
+\end{verbatim}
+the tool will interpret the \acrshort{WIT} interface, generate bindings for Rust code, and produce a compiled \acrshort{Wasm} module. The guest component makes use of this tool to produce a \acrshort{Wasm} module with ease.
+
+\subsection{Calling the \acrshort{USB} \acrshort{API}}
+Now that the \acrshort{WIT} interface is defined and bindings are created, calling the USB API is straightforward. Code snippet \ref{code:calling_usb_api} shows the \texttt{main} function of the guest component. This function will start listening to connection events, and calls the \texttt{component:usb/events{update}} function to get these events. Next, it will match the event using the \texttt{component:usb/events{device-connection-event}} variant. As can be seen in the code snippet, these \acrshort{WASI} types are translated to Rust types and can be imported into the file. Then, they can be used like regular Rust code. \\
+
+\begin{code}
+\begin{minted}[tabsize=4, breaklines]{rust}
+use crate::bindings::component::usb::{
+	usb::UsbDevice, 
+	events::DeviceConnectionEvent
+};
+
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
+	loop {
+		match update() {
+			DeviceConnectionEvent::Pending => sleep(Duration::from_secs(1)).await,
+			DeviceConnectionEvent::Connected(device) if device.is_stadia_device() => {
+				// Found stadia controller
+				... // Handle
+			},
+			DeviceConnectionEvent::Disconnected(device) if device.is_stadia_device() => {
+				// Stadia controller is removed
+				... // Handle
+			},
+			_ => continue
+		}
+	}
+}
+\end{minted} 
+\caption{The \acrshort{WIT} world for the guest component}
+\label{code:calling_usb_api}
+\end{code}
+
