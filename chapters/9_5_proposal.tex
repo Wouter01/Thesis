@@ -41,6 +41,24 @@ No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not 
 
 A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here} \footnote{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}.
 
+\section{Timeline}
+Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened during the year regarding the proposal. At the time of writing, the \acrshort{WASI} \acrshort{USB} proposal is in Phase 1.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l|p{12cm}}
+		\toprule
+		\textbf{Date} & \textbf{Event} \\
+		\midrule
+		29 November 2023 & An issue \cite{wasi_issue_570} was created on the WASI repository, stating the interest in creating an USB proposal. Proposal is at phase 0. \\
+		5 March 2024 & Initial WIT for proposal created\\
+		4 April 2024 & Presentation \cite{wasi_meeting_notes} of proposal in WASI meeting. Proposal has moved to phase 1 \\
+		\bottomrule
+	\end{tabular}
+	\caption{Timeline of events related to the USB proposal in the WASI repository}
+	\label{tab:wasi_usb_proposal}
+\end{table}
+
 \section{USB Proposal}
 \label{section:usb_proposal}
 The \texttt{wasi-usb} repository \cite{wasi_usb} contains the contents of the proposal to standardize the USB interface. The proposal contains a draft of the \acrshort{WIT} interface of the USB API. This section will highlight the important parts of the API.
@@ -115,21 +133,3 @@ The second option would create a more intuitive API, as less errors can be throw
 \section{Usage in multiple components}
 \label{section:usage_in_multiple_components}
 It is possible that multiple components interact with the \acrshort{USB} \acrshort{API} and try accessing a \acrshort{USB} device at the same time. This should be avoided, as a component generally expects to have exclusive access to a device. To solve this issue, the runtime should keep track of which devices are used by which components, and deny opening a device when another component is already using it. This approach follows the same model as most operating systems, where only one program can have access to a \acrshort{USB} device at a time.
-
-\section{Timeline}
-Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened during the year regarding the proposal.
-
-\begin{table}[h]
-	\centering
-	\begin{tabular}{l|p{12cm}}
-		\toprule
-		\textbf{Date} & \textbf{Event} \\
-		\midrule
-		29 November 2023 & An issue \cite{wasi_issue_570} was created on the WASI repository, stating the interest in creating an USB proposal. Proposal is at phase 0. \\
-		5 March 2024 & Initial WIT for proposal created\\
-		4 April 2024 & Presentation \cite{wasi_meeting_notes} of proposal in WASI meeting. Proposal has moved to phase 1 \\
-		\bottomrule
-	\end{tabular}
-	\caption{Timeline of Events Related to the USB Proposal in the WASI Repository}
-	\label{tab:wasi_usb_proposal}
-\end{table}

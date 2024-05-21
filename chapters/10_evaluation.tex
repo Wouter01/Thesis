@@ -9,11 +9,29 @@ The general idea of the program is to control a game controller. The program is 
 \subsection{Test Setup}
 The code will call the event-related API to start watching for USB devices. It will get events when devices are connected or disconnected. As WASI does not support asynchronous code yet, a form of polling is used to get device connection events. The guest code uses a single-threaded asynchronous runtime, which will often yield to get new device connection events. This way, a multi-threaded real app can be simulated.
 
-Each time a device connection event happens, the device product and vendor ID are checked to see if they match the predefined controller product and vendor ID. A Google Stadia controller is used to test this code, so the IDs of this controller type are used. If the IDs match, a connection is made to the device by opening a device handle. When a device disconnection event with matching IDs happens, the program will stop reading the controller state, and wait for a new connection.
+\begin{enumerate}
+\item Each time a device connection event happens, the device product and vendor ID are checked to see if they match the predefined controller product and vendor ID. A Google Stadia controller is used to test this code, so the IDs of this controller type are used.
 
-Next, the program will try reading the controller state. This way, it knows about the positions of buttons, joysticks, triggers, etc. In order to do this, the correct interface and endpoint must be chosen. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. In order to send information over the interface, it must first be claimed by the program. Some operating systems will attach to the interfaces by default. The host code of the API will automatically disconnect kernel attachments when claiming an interface. However, different operating systems can have different behavior in this part. For example, macOS, where the example program was ran on, does not allow detaching kernel interfaces by default for certain device classes, such as controllers. This is problematic, as we cannot interact in any way with the device this way. Elevated privileges (\texttt{sudo}) were required to get the program working. While being annoying, this was also a useful discovery, as this issue can be added to the proposal, so the standard can adjust to this.
+\item Make a connection and open a device handle if the device IDs match.
 
-Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample controller state output is showed in Code snippet \ref{code:wasi_controller_sample_output}.
+\item Select the correct configuration and interface. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. macOS is used to run this example which offers default drivers for controllers, so elevated privileges are needed to detach the kernel drivers. Otherwise, the program cannot claim the interrupt interface.
+
+\item Read the controller state from the interrupt interface, such as which buttons are pressed, what the position of the joysticks is, etc. An array of bytes is received, and by observing changes to this array when pressing a button, the byte layout can be decoded.
+
+\item Print out the controller state. A sample output is showed in Code snippet \ref{code:wasi_controller_sample_output}.
+
+\item Make the controller vibrate. This happens when the program state reports that one of the shoulder buttons has registered pressure. The state of the shoulder buttons is mapped to intensity of the rumble motors. This data is sent over the interrupt interface. When the controller receives the data it starts vibrating.
+
+\item When a device disconnection event with matching IDs happens, the program will stop reading the controller state, close the device handle, and wait for a new connection.
+
+
+\end{enumerate}
+
+% Each time a device connection event happens, the device product and vendor ID are checked to see if they match the predefined controller product and vendor ID. A Google Stadia controller is used to test this code, so the IDs of this controller type are used. If the IDs match, a connection is made to the device by opening a device handle. When a device disconnection event with matching IDs happens, the program will stop reading the controller state, and wait for a new connection.
+% 
+% Next, the program will try reading the controller state. This way, it knows about the positions of buttons, joysticks, triggers, etc. In order to do this, the correct interface and endpoint must be chosen. Input devices, like controllers or mice, send their data over the Interrupt transfer type, because the data sent is small and time-sensitive. Knowing this information, the interfaces can be requested and filtered to select the correct interface. In order to send information over the interface, it must first be claimed by the program. Some operating systems will attach to the interfaces by default. The host code of the API will automatically disconnect kernel attachments when claiming an interface. However, different operating systems can have different behavior in this part. For example, macOS, where the example program was ran on, does not allow detaching kernel interfaces by default for certain device classes, such as controllers. This is problematic, as we cannot interact in any way with the device this way. Elevated privileges (\texttt{sudo}) were required to get the program working. While being annoying, this was also a useful discovery, as this issue can be added to the proposal, so the standard can adjust to this.
+% 
+% Once the interface is claimed, device state can be requested by reading the interrupt state with the correct endpoint address. An array of bytes will be received, and by observing what changes when pressing a button, the byte layout can be decoded. A sample controller state output is showed in Code snippet \ref{code:wasi_controller_sample_output}.
 
 \begin{code}
 \begin{verbatim}
@@ -29,14 +47,12 @@ r2: 172
 \label{code:wasi_controller_sample_output}
 \end{code}
 
-Lastly, the program also tests sending data over the USB interface. A controller is generally an input-only device. However, modern controllers often have a rumbling feature, where the controller will vibrate to get a more immersive playing experience. This program sends data over the USB interface to control the rumble feature. It will map the state of the shoulder trigger button pressure to the intensity of a rumble motor.
-
 \subsection{Results}
 This program has been tested with a Google Stadia controller. When pressing one or multiple buttons, the correct state is printed out. When pressing one or both of the shoulder buttons, the controller starts to vibrate.
 
 
 
-\section{Performance Testing}
+\section{Hardware Configuration}
 
 Tests were performed to evaluate the performance of the API. In these tests, test programs are created which run in WASI, as a native program or, when available, on Wasm in the browser. Table \ref{table:test_hardware} shows the hardware configurations of the devices used to do these tests.
 
@@ -44,12 +60,15 @@ Tests were performed to evaluate the performance of the API. In these tests, tes
 \[
 \begin{array}{|l|l|l|l|l|l|}
 \hline
-\textbf{Device Kind} & \textbf{Name} & \textbf{SoC/Microcontroller} & \textbf{RAM} & \textbf{Storage} \\
+\textbf{Device} & \textbf{Name} & \textbf{SoC/Microcontroller} & \textbf{RAM} & \textbf{Storage} & \textbf{USB Version} \\
 \hline
-\text{Host} & \text{Apple Macbook Air (2020)} & \text{Apple M1 (8-core CPU, 7-core GPU)} & \text{8GB} & \text{256GB SSD} \\
+\text{Host} & \text{Apple Macbook Air (2020)} & \text{Apple M1 (8-core CPU, 7-core GPU)} & \text{8GB} & \text{256GB SSD} & \text{4.0} \\
 
 \hline
-\text{Guest} & \text{Arduino Micro} & \text{Atmel ATmega32U4} & \text{2,5KB} & \text{32KB Flash} \\
+\text{Guest} & \text{Arduino Micro} & \text{Atmel ATmega32U4} & \text{2,5KB} & \text{32KB Flash} & \text{2.1} \\
+
+\hline
+\text{Guest} & \text{Samsung T5} & \text{} & \text{} & \text{500GB SSD} & \text{3.1 Gen 2} \\
 \hline
 \end{array}
 \]
@@ -58,9 +77,11 @@ Tests were performed to evaluate the performance of the API. In these tests, tes
 \end{table}
 
 
-\subsection{Latency}
+\section{Latency Evaluation}
 
 One of the advantages of \acrshort{Wasm} should be that it offers near-native speed. Therefore, it is interesting to test if running a program in Wasm brings any performance overhead compared to a native program. For an USB API, this can best be tested by measuring the latency when sending or receiving data. It can be problematic if the overhead is large, as data exchange through USB happens by receiving or sending data in small chunks. Each of these chunks has to pass through the Wasm bridge and has its own overhead.
+
+\subsection{Receiving data from Arduino}
 
 \subsubsection{Test Setup}
 A program has been written with LibUSB (Native), WASI USB (Wasm) and WebUSB (Browser). Each program will do the following steps:
@@ -83,6 +104,13 @@ A program has been written with LibUSB (Native), WASI USB (Wasm) and WebUSB (Bro
   \label{fig:arduino_reading_latency}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/arduino_latency_boxplot.png}
+  \caption{Latency of reading data from Arduino using read-bulk}
+  \label{fig:arduino_reading_latency_boxplot}
+\end{figure}
+
 
 \paragraph{Interpreting Results}
 Figure \ref{fig:arduino_reading_latency} shows a \acrfull{KDE} for the measurements of the native and \acrshort{WASI} implementation.
@@ -92,12 +120,50 @@ Based on the results, we can conclude that there are no measurable differences b
 
 However, it is possible that the delay of the USB protocol is smaller on devices more powerful than an Arduino or with a more modern USB version. With these configurations, it can be possible a small overhead for Wasm becomes visible.
 
-In order to confirm that WASI does not add noticeable latency, a new benchmark was added which will read the contents of an USB mass storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
+\subsection{Reading files from mass storage device}
+
+In order to confirm that WASI does not add noticeable latency, a new benchmark was added which reads the contents of an USB mass storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
 
 \subsubsection{Test Setup}
-A program has been written which will read out the file tree of a USB device, and will read the contents of each file in the file tree. The device used is a USB 2.0 Mass Storage device, which has been formatted to use the MBR partition map and the EXFat file system. Communication with the device happens over the SCSI interface. The program uses a EXFat package, which uses a generic interface which works similar to a file handle to communicate with the USB device. A SCSI adapter has been written which will read blocks of the USB device. A cache is used to simulate typical behavior of a USB mass storage driver.
+A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s. The device is formatted with the MBR partition map and the EXFat file system. Communication with the device happens over the SCSI interface. The program uses a EXFat package, which uses a generic interface which works similar to a file handle to communicate with the USB device. A SCSI adapter has been written which will read blocks of the USB device. A cache is used to simulate typical behaviour of a USB mass storage driver.
 
 An overview of the file tree of the USB device is the following:
+
+\begin{verbatim}
+[128K]  /Volumes/Untitled
+├── [128K]  folder0
+│   ├── [4.0M]  Chapter 1.pdf
+│   ├── [ 17M]  Chapter 1.pptx
+│   ├── [1.0M]  Chapter 2.pdf
+│   ├── [1.3M]  Chapter 2.pptx
+│   ├── [1.4M]  Chapter 3.pdf
+│   ├── [2.5M]  Chapter 3.pptx
+│   ├── [780K]  Chapter 4.pdf
+│   ├── [1.1M]  Chapter 4.pptx
+│   ├── [642K]  Chapter 5.pdf
+│   ├── [1.0M]  Chapter 5.pptx
+│   └── [1.9K]  Table of Contents.html
+├── [128K]  folder1
+│   ├── [ 964]  Table of Contents.html
+│   ├── [351K]  document.pdf
+│   ├── [140K]  document2.pdf
+│   ├── [4.2K]  import.cypher
+│   ├── [1.3M]  nodes.csv
+│   └── [2.9M]  relationships.csv
+└── [128K]  folder2
+    ├── [ 964]  Table of Contents.html
+    ├── [351K]  document.pdf
+    ├── [140K]  document2.pdf
+    ├── [4.2K]  import.cypher
+    ├── [1.3M]  nodes.csv
+    └── [2.9M]  relationships.csv
+\end{verbatim}
+
+The program enumerates the file tree and will read out the contents of each file, and report each file size and name. This is repeated 100 times.
+
+\subsubsection{Results}
+
+Figure ... shows the results of reading the file tree and the file contents of the device. From the initial results, it looks like the WASI implementation has a lower average latency, while having a higher (verschil). This is an odd result, as one would expect the native version to be faster. However, there is an explanation for this behaviour. The test setup will read the file contents of the device 100 times and measure each duration. To thoroughly test the USB API, all content data will be read and will eventually be kept in memory. This results in a lot of memory usage. The memory model of \textit{native} Rust will allocate memory when necessary and deallocate when a value goes out of scope. This will result in a lot of \texttt{malloc} and \texttt{free} calls. The memory model of \texttt{WASI} Rust is different. As stated in the documentation of Wasmtime's \texttt{Store}: `A Store is intended to be a short-lived object in a program. No form of GC is implemented at this time so once an instance is created within a Store it will not be deallocated until the Store itself is dropped.' \cite{wasmtime_store}. This means that there will be significantly less \texttt{malloc}s and \texttt{free}s for the program running in Wasmtime
 
 
 \subsection{Memory Usage}
