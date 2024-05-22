@@ -110,25 +110,7 @@ A program has been written with LibUSB (Native), WASI USB (Wasm) and WebUSB (Bro
 \end{enumerate}
 
 \subsubsection{Results}
-
-
-
-\paragraph{Interpreting Results}
-Figure \ref{fig:arduino_reading_latency_boxplot} shows the the latencies of both programs.
- These results are shown on a logarithmic scale. This is needed because both results contain outliers with very high values. These outliers are likely caused by transmission errors when receiving data from the Arduino. The \textit{Bulk} interface is used, providing data integrity but no timing guarantees. Consequently, data loss will be prevented, but will introduce high latencies as observed here.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|}
-\hline
- & \textbf{Native} & \textbf{WASI} \\ \hline
-\textbf{Largest Outlier (μs)} & 83052 & 75618 \\ \hline
-\textbf{Amount of Outliers (\textgreater 2000)} & 747 & 1058 \\ \hline
-\textbf{Percentage of Total} & 0.07\% & 0.10\% \\ \hline
-\end{tabular}
-\caption{Comparison of Latency Outliers between Native and WASI}
-\label{tab:latency_comparison}
-\end{table}
+Figure \ref{fig:arduino_reading_latency_boxplot} shows a boxplot of the latencies of both programs. After a million measurements for each program, the median duration is exactly the same, 377μs. The average of the native program is marginally lower, being 0,2\% faster than the \acrshort{WASI} program. The whiskers and IQR of the \acrshort{WASI} program are slightly smaller, meaning a more consistent result. However, the differences in results are too small to conclude any noticeable overhead.
 
 \begin{figure}[H]
   \centering
@@ -136,6 +118,23 @@ Figure \ref{fig:arduino_reading_latency_boxplot} shows the the latencies of both
   \caption{Latency of reading data from Arduino using read-bulk}
   \label{fig:arduino_reading_latency_boxplot}
 \end{figure}
+
+
+Figure \ref{fig:arduino_reading_latency_boxplot} also contains outliers, marked by the black circles. Some of the outliers are very large. Therefore, the results are shown on a logarithmic scale. These outliers are likely caused by transmission errors when receiving data from the Arduino. The \textit{Bulk} interface is used, providing data integrity but no timing guarantees. Consequently, data loss will be prevented, but will introduce high latencies as observed here. Table \ref{table:latency_comparison} shows more information about the outliers. As the percentage of outliers is very small and occur in equal quantities in both cases, they have been excluded from further figures to improve the clarity of the graphs.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+ & \textbf{Native} & \textbf{WASI} \\ \hline
+\textbf{Largest Outlier (μs)} & 75618 & 83052 \\ \hline
+\textbf{Amount of Outliers (\textgreater 2000)} & 747 & 1058 \\ \hline
+\textbf{Percentage of Total} & 0.07\% & 0.10\% \\ \hline
+\end{tabular}
+\caption{Comparison of Latency Outliers between Native and WASI}
+\label{table:latency_comparison}
+\end{table}
+
 
 
 Figure \ref{fig:arduino_reading_latency} shows a \acrfull{KDE} for the measurements of the native and \acrshort{WASI} implementation.
@@ -181,18 +180,18 @@ The second peak is more nuanced. Table \ref{table:arduino_output} shows a snippe
 \label{table:arduino_output}
 \end{table}
 
-Based on the results, we can conclude that there are no measurable differences between the different implementations of the program. However, this is mainly caused by the delay of the USB protocol. This delay vastly outweighs the delays caused by overhead of the Wasm runtime, making the Wasm overhead negligible.
+Based on the results, we can conclude that there are no measurable differences between the native and \acrshort{WASI} program. However, this is mainly caused by the delay of the USB protocol. This delay vastly outweighs the delays caused by overhead of the Wasm runtime, making the Wasm overhead negligible.
 
 However, it is possible that the delay of the USB protocol is smaller on devices more powerful than an Arduino or with a more modern USB version. With these configurations, it can be possible a small overhead for Wasm becomes visible.
 
 \subsection{Reading files from mass storage device}
 
-In order to confirm that WASI does not add noticeable latency, a new benchmark was added which reads the contents of an USB mass storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
+In order to confirm that WASI does not add noticeable latency, another benchmark is performed, which reads the contents of an USB Mass Storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
 
 \subsubsection{Test Setup}
 A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s and is formatted with the \acrshort{MBR} partition map and the \acrshort{exFAT} file system. There are 11947 files stored on the device, with various sizes between 0B and 679MB, totalling to a size of 3,25GB.
 
-The program contains a working but incomplete implementation for the \acrshort{USB} Mass Storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents contained there.
+The program contains a working but incomplete implementation for the \acrshort{USB} Mass Storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents from there up until a specified length.
 
 \paragraph{\acrshort{USB} \acrshort{API} Usage}
 As the name of the specification suggests, communication with the device happens on the interfaces with the \textit{Bulk} transfer type. Some exceptions, such as the \texttt{reset} command, will use the \textit{Control} transfer type on interface zero.
@@ -203,7 +202,7 @@ The \acrshort{USB} Mass Storage implementation acts as the base layer to communi
 \begin{itemize}
 \item Partition Map: A disk is usually split up in multiple partitions. A partition map contains information about those partitions. It is located in the first sector (sector 0) of the device. Popular partition maps are the \acrfull{MBR} and the \acrfull{GPT}. The test device has a \acrfull{MBR} partition map. The Rust package \textit{mbrman} \cite{mbrman} is used to read the \acrshort{MBR} and obtain the start and end addresses of the partition which contains the file system.
 
-\item File System: The file system organizes files and their metadata in a defined format. There exist a lot of file systems, but the most popular for Mass Storage devices are \acrfull{FAT32}, \acrfull{exFAT} and \acrfull{NTFS}. The test device uses the \acrshort{exFAT} file system. The test program uses the \textit{exfat} \cite{exfat_package} Rust package to read the file tree.
+\item File System: The file system organizes files and their metadata in a defined format. There exist a lot of file systems, but the most popular for Mass Storage devices are \acrfull{FAT32}, \acrfull{exFAT} and \acrfull{NTFS}. The test device uses the \acrshort{exFAT} file system. The test program uses the \textit{exfat} \cite{exfat_package} Rust package to interpret the \acrshort{exFAT} partition.
 \end{itemize}
 
 Both \textit{mbrman} and \textit{exfat} use the Mass Storage implementation to read data at addresses. Code snippet \ref{code:implementation_mass_storage} shows how the Mass Storage implementation is used to read the files.
@@ -244,7 +243,7 @@ fn main() {
 \label{code:implementation_mass_storage}
 \end{code}
 
-With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and report each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in Wasmtime using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
+With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and reports each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in Wasmtime using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
 
 \subsubsection{Results}
 
