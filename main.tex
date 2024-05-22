@@ -87,7 +87,7 @@
 % We use the package `minted` for modern code highlighting.
 \usepackage[newfloat,chapter]{minted}
 \SetupFloatingEnvironment{listing}{name=Codefragment, listname=List of Acronyms}
-%\SetupFloatingEnvironment{listing}{name=Code Fragment, listname=List of Code Fragments} % lang:english
+% \SetupFloatingEnvironment{listing}{name=Code Fragment, listname=List of Code Fragments} % lang:english
 
 
 \PassOptionsToPackage{hyphens}{url}
@@ -128,6 +128,8 @@
 \newenvironment{code}{\captionsetup{type=listing}}{}
 \SetupFloatingEnvironment{listing}{name=Source Code}
 
+\renewcommand{\lstlistlistingname}{List of Code Snippets}
+
 %
 %  END OF HEADER
 %  The actual latex document content starts here.
@@ -150,6 +152,9 @@
 \listoffigures\newpage
 \listoftables\newpage
 \include{chapters/5_list_of_acronyms}
+
+ \lstlistoflistings 
+
 % \listoflistings\newpage
 
 %
