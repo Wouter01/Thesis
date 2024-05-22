@@ -163,52 +163,61 @@ However, it is possible that the delay of the USB protocol is smaller on devices
 In order to confirm that WASI does not add noticeable latency, a new benchmark was added which reads the contents of an USB mass storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
 
 \subsubsection{Test Setup}
-A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s. The device is formatted with the MBR partition map and the EXFat file system. Communication with the device happens over the SCSI interface. The program uses a EXFat package, which uses a generic interface which works similar to a file handle to communicate with the USB device. A SCSI adapter has been written which will read blocks of the USB device. A cache is used to simulate typical behaviour of a USB mass storage driver.
+A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s. The device is formatted with the MBR partition map and the EXFat file system. There are 11947 files stored on the device, with various sizes between 0B and 679MB. In total, the device contains 3,25GB of data. 
 
-The program can be split up in these steps:
+The program contains a working but incomplete implementation for the \acrshort{USB} Mass Storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents contained there.
 
-\begin{enumerate}
-\item Enumerate all devices. Select the first device which contains an interface with class code \texttt{0x08} and protocol code \texttt{0x50}. \texttt{0x08} is the identifier for a mass storage device, \texttt{0x50} is for bulk-only transport mode which is used for this test. Select the configuration and interface.
+\paragraph{\acrshort{USB} \acrshort{API} Usage}
+As the name of the specification suggests, communication with the device happens on the interfaces with the \textit{Bulk} transfer type. Some exceptions, such as the \texttt{reset} command, will use the \textit{Control} transfer type on interface zero.
 
-\item Send the \texttt{test\_unit\_ready} signal to check if the device is ready to communicate.
+\paragraph{Reading drive contents}
+The \acrshort{USB} Mass Storage implementation acts as the base layer to communicate with the device. However, further abstraction is required. USB Mass Storage devices can still differ in numerous ways:
 
- 
-\end{enumerate}
+\begin{itemize}
+\item Partition Map: A disk is usually split up in multiple partitions. A partition map contains information about those partitions. It is located in the first sector (sector 0) of the device. Popular partition maps are the \acrfull{MBR} and the \acrfull{GPT}. The test device has an \acrfull{MBR} partition map. The package \textit{mbrman} \cite{mbrman} is used to read the \acrshort{MBR} and obtain the start and end addresses of the partition which contains the file system.
 
+\item File System: The file system organizes files and their metadata in a defined format. There exist a lot of file systems, but the most popular for Mass Storage devices are \acrfull{FAT32}, \acrfull{exFAT} and \acrfull{NTFS}. The test device uses the \acrshort{exFAT} file system. The test program uses the \textit{exfat} \cite{exfat_package} Rust package to read the file tree.
+\end{itemize}
 
-An overview of the file tree of the USB device is the following:
+The \textit{mbrman} and \textit{exfat} both use the Mass Storage implementation interface to read data at addresses. Code snippet \ref{code:implementation_mass_storage} shows how the Mass Storage implementation is used to read the files.
 
-\begin{verbatim}
-[128K]  /Volumes/Untitled
-├── [128K]  folder0
-│   ├── [4.0M]  Chapter 1.pdf
-│   ├── [ 17M]  Chapter 1.pptx
-│   ├── [1.0M]  Chapter 2.pdf
-│   ├── [1.3M]  Chapter 2.pptx
-│   ├── [1.4M]  Chapter 3.pdf
-│   ├── [2.5M]  Chapter 3.pptx
-│   ├── [780K]  Chapter 4.pdf
-│   ├── [1.1M]  Chapter 4.pptx
-│   ├── [642K]  Chapter 5.pdf
-│   ├── [1.0M]  Chapter 5.pptx
-│   └── [1.9K]  Table of Contents.html
-├── [128K]  folder1
-│   ├── [ 964]  Table of Contents.html
-│   ├── [351K]  document.pdf
-│   ├── [140K]  document2.pdf
-│   ├── [4.2K]  import.cypher
-│   ├── [1.3M]  nodes.csv
-│   └── [2.9M]  relationships.csv
-└── [128K]  folder2
-    ├── [ 964]  Table of Contents.html
-    ├── [351K]  document.pdf
-    ├── [140K]  document2.pdf
-    ├── [4.2K]  import.cypher
-    ├── [1.3M]  nodes.csv
-    └── [2.9M]  relationships.csv
-\end{verbatim}
+\begin{code}
+\begin{minted}[breaklines, tabsize=4]{rust}
 
-The program enumerates the file tree and will read out the contents of each file, and report each file size and name. This is repeated 100 times.
+fn main() {
+    // Open the Mass Storage device.
+    let mut device = MassStorageDevice::new()?;
+    let block_length = device.capacity.block_length;
+
+    // Read the MBR to get information about the device partitions.
+    let mbr = mbrman::MBR::read_from(device, block_length)?;
+
+    // Select the first used partition.
+    let data_partition = mbr.iter().find(|p| p.1.is_used())
+        .ok_or(anyhow!("No used partition found"))?.1;
+
+    // Apply a slice to the device stream, so only the selected partition is considered when reading.
+    let slice_start = ...
+    let slice_end = ...
+    let slice = IoSlice::new(device, slice_start, slice_end)?;
+
+    // Apply buffering to the stream to increase performance.
+    let buffered_stream = BufReader::new(slice);
+    
+    // Open the exFAT file system.
+    let filetree = ExFat::open(buffered_stream)?;
+
+    // Recursively read the device tree.
+    for item in filetree {
+        read_item(item)?;
+    }
+}
+\end{minted}
+\caption{Code to read files and directories from the Mass Storage device.}
+\label{code:implementation_mass_storage}
+\end{code}
+
+With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and report each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in Wasmtime using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
 
 \subsubsection{Results}
 
@@ -224,21 +233,21 @@ Figure \ref{fig:malloc_instruments} shows the total time spent on \texttt{malloc
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/malloc_screenshot.png}
-  \caption{approx. 25\% of the native program execution time is spent on \texttt{malloc}}
+  \caption{Approx. 25\% of the native program execution time is spent on \texttt{malloc}.}
   \label{fig:malloc_instruments}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/malloc_wasi_screenshot.png}
-  \caption{approx. 0.6\% of the \acrshort{WASI} program execution time is spent on \texttt{malloc}}
+  \caption{Approx. 0.6\% of the \acrshort{WASI} program execution time is spent on \texttt{malloc}.}
   \label{fig:malloc_wasi_instruments}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/mass_storage_1000_runs_naive.png}
-  \caption{Latency of reading data from Arduino using read-bulk}
+  \caption{Latency of reading the file tree and contents. The \acrshort{WASI} results incorrectly report a better result due to differences in memory allocation between both programs. On average, the native program is 12\% slower.}
   \label{fig:mass_storage_latency_naive}
 \end{figure}
 
@@ -255,7 +264,7 @@ Based on these results, we can conclude that running the code using the \acrshor
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/mass_storage_1000_runs_optimized.png}
-  \caption{Latency of reading data from Arduino using read-bulk}
+  \caption{Latency of reading the file tree and contents. Both programs now use a similar memory allocation method leading to more accurate results. On average, the \acrshort{WASI} \acrshort{USB} implementation is approx. 4,2\% slower.}
   \label{fig:mass_storage_latency_optimized}
 \end{figure}
 
