@@ -2,7 +2,7 @@
 \label{chapter:implementation}
 This chapter dives deeper into the internals of the API. First, an overview will be given of how a typical series of calls works under the hood. Next, the runtime implementation will be discussed. At last, using the \acrshort{API} in a guest component will be explained.
 
-The repository containing the code can be found \href{https://github.com/Wouter01/USB_WASI}{here} \footnote{https://github.com/Wouter01/USB\_WASI}
+The repository containing the code can be found \href{https://github.com/Wouter01/USB_WASI}{here} \footnote{https://github.com/Wouter01/USB\_WASI}.
 
 \section{Overview}
 
@@ -53,7 +53,7 @@ The \acrshort{PoC} runtime embeds the Wasmtime runtime. The method of running is
 
 Code snippet \ref{code:main} shows the main function of the runtime. First, the arguments are parsed, which contain the path to the component to run and identifiers of USB devices which are visible to components using the \acrshort{USB} \acrshort{API}. Next, the component gets instantiated (see code snippet \ref{code:start_component}) and an allowlist of devices is created. Finally, the component gets started.
 
-The main function is annotated with \texttt{\#[tokio::main]}, meaning that the asynchronous Tokio runtime \cite{tokio} will be used. Note that Tokio is an asynchronous runtime for Rust, and is not related to the Wasmtime runtime. The use of an asynchronous runtime is done for two reasons:
+The main function is annotated with \texttt{\#[tokio::main]}, meaning that the asynchronous Tokio runtime \cite{tokio} will be used. Tokio is an asynchronous runtime for Rust, and is not related to the Wasmtime runtime. The use of an asynchronous runtime is done for two reasons:
 \begin{itemize}
 \item The Wasmtime configuration in the runtime has enabled async support. At the time of writing, this isn't a really useful addition \cite{wasmtime_async_config}. However, this will become more useful once \acrshort{WASI} preview 3 lands, which will add proper async support to the \acrshort{WIT} language. Enabling async support now partially prepares for this upcoming feature.
 
@@ -89,13 +89,12 @@ Code snippet \ref{code:start_component} shows how the passed in component will g
 \item \texttt{Linker}: A linker is used to link components. Each component defines imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
 \item \texttt{Component}: Used to represent a \acrshort{WASI} component.
 \item \texttt{Store}: `A Store is a collection of WebAssembly instances and host-defined state.
-
 All WebAssembly instances and items will be attached to and refer to a Store. For example instances, functions, globals, and tables are all attached to a Store. Instances are created by instantiating a Module within a Store.' \cite{wasmtime_store}
 \end{itemize}
 
 Next, the built-in components are added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} adds all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} links the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
 
-The \texttt{start} function creates a new \texttt{Store} object. This object is associated with the earlier created engine, and contains the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created. We assume that the component is a \texttt{Command} (\ref{section:component_kinds}) and therefore exposes a \texttt{main} function. The \texttt{main} function, in \acrshort{WASI} terms also known as the \texttt{\_start} function, gets called.
+The \texttt{start} function creates a new \texttt{Store} object. This object is associated with the earlier created engine, and contains the memory for an instance of \texttt{USBHostWasiView}. Finally, an instance of the guest component is created. We assume that the component is a \texttt{Command} (\ref{section:component_kinds}) and therefore exposes a \texttt{main} function. The \texttt{main} function, in \acrshort{WASI} terms also known as the \texttt{\_start} function, gets called.\\
 
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}
@@ -146,7 +145,7 @@ The runtime must conform to the \acrshort{WIT} interface described in section \r
 The usage of the \texttt{bindgen} macro is shown in code snippet \ref{code:wit_bindgen}.
 This macro will generate Rust types and traits that represent their \acrshort{WIT} counterparts. The host must conform to all these traits. Otherwise, adding the \acrshort{USB} \acrshort{WIT} interface to the linker will be disallowed.
 
-The \texttt{with} map shown in code snippet \ref{code:wit_bindgen} is used to point the \texttt{bindgen} tool to the Rust types we want to use to represent the \texttt{usb-device} and \texttt{device-handle} resources. The \texttt{bindgen} macro will use these types in the generated traits.
+The \texttt{with} map shown in code snippet \ref{code:wit_bindgen} is used to point the \texttt{bindgen} tool to the Rust types we want to use to represent the \texttt{usb-device} and \texttt{device-handle} resources. The \texttt{bindgen} macro will use these types in the generated traits.\\
 
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}
@@ -199,7 +198,7 @@ pub struct DeviceHandle {
 \end{code}
 
 \subsection{Conforming to constraints}
-Section \ref{section:capability_based_security} and \ref{section:usage_in_multiple_components} mention important constraints regarding the correct implementation of the API. The implementation conforms to these constraints:
+Section \ref{section:capability_based_security} and \ref{section:usage_in_multiple_components} mention important constraints regarding the correct implementation of the API. The implementation conforms to the following constraints.
 
 \paragraph{Capability-based security}
 As seen in code snippet \ref{code:main}, an allowlist gets created, containing a series of device IDs. A device is identified by the pair \texttt{vendor\_id:product\_id}. These can be passed in as arguments when running the program. An optional flag \texttt{--usb-use-denylist} can be given so the program uses a denylist instead of an allowlist.

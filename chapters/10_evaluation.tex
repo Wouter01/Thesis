@@ -97,12 +97,6 @@ A program has been written with LibUSB (Native), WASI USB (Wasm) and WebUSB (Bro
 \end{enumerate}
 
 \subsubsection{Results}
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=1\textwidth]{images/reading_data_latency.png}
-  \caption{Latency of reading data from Arduino using read-bulk}
-  \label{fig:arduino_reading_latency}
-\end{figure}
 
 \begin{figure}[H]
   \centering
@@ -111,10 +105,54 @@ A program has been written with LibUSB (Native), WASI USB (Wasm) and WebUSB (Bro
   \label{fig:arduino_reading_latency_boxplot}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/reading_data_latency.png}
+  \caption{Latency of reading data from Arduino using read-bulk}
+  \label{fig:arduino_reading_latency}
+\end{figure}
+
+
+
 
 \paragraph{Interpreting Results}
+Figure \ref{fig:arduino_reading_latency_boxplot} shows the the latency of both programs on a logarithmic scale. This happens
+
 Figure \ref{fig:arduino_reading_latency} shows a \acrfull{KDE} for the measurements of the native and \acrshort{WASI} implementation.
-Both graphs will show peaks around the 150μs and 910μs marks. This is an interesting result, as one would expect one uniform distribution instead of two. The first peak is trivial to explain: the Arduino is an USB 2.0 device, also known as a High-speed USB device. A High-speed USB device will send frames at a fixed interval of 125μs. Therefore, we will receive new data approx. every 125μs. An extra 25μs are introduced because of processing delays.
+Both graphs will show peaks around the 150μs and 910μs marks. This is an interesting result, as one would expect one uniform distribution instead of two. The first peak is trivial to explain: the Arduino is an USB 2.0 device, also known as a High-speed USB device. A High-speed USB device will send frames at a fixed interval of 125μs. Therefore, we will receive new data approx. every 125μs. An extra 25μs are introduced because of processing delays. 
+
+The second peak is more nuanced. Table \ref{table:arduino_output} shows a snippet of the measured latencies. For both Native and WASI code, the latencies will oscillate between both peaks. Based on these results, this peak is likely caused by the small buffer size in the Arduino. The buffer is 64 bytes large, which is the same size as one packet. When the buffer is full, the program halts until the buffer has space again. On the host this is perceived as an extra delay when receiving the data.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Native (μs)} & \textbf{WASI (μs)} \\
+\hline
+801 & 918 \\
+\hline
+150 & 163 \\
+\hline
+885 & 931 \\
+\hline
+132 & 241 \\
+\hline
+903 & 799 \\
+\hline
+110 & 197 \\
+\hline
+938 & 820 \\
+\hline
+104 & 77 \\
+\hline
+962 & 1003 \\
+\hline
+108 & 97 \\
+\hline
+\end{tabular}
+\caption{Snippet of measured latencies. The latencies oscillate between a long latency and a short latency.}
+\label{table:arduino_output}
+\end{table}
 
 Based on the results, we can conclude that there are no measurable differences between the different implementations of the program. However, this is mainly caused by the delay of the USB protocol. This delay vastly outweighs the delays caused by overhead of the Wasm runtime, making the Wasm overhead negligible.
 
@@ -126,6 +164,17 @@ In order to confirm that WASI does not add noticeable latency, a new benchmark w
 
 \subsubsection{Test Setup}
 A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s. The device is formatted with the MBR partition map and the EXFat file system. Communication with the device happens over the SCSI interface. The program uses a EXFat package, which uses a generic interface which works similar to a file handle to communicate with the USB device. A SCSI adapter has been written which will read blocks of the USB device. A cache is used to simulate typical behaviour of a USB mass storage driver.
+
+The program can be split up in these steps:
+
+\begin{enumerate}
+\item Enumerate all devices. Select the first device which contains an interface with class code \texttt{0x08} and protocol code \texttt{0x50}. \texttt{0x08} is the identifier for a mass storage device, \texttt{0x50} is for bulk-only transport mode which is used for this test. Select the configuration and interface.
+
+\item Send the \texttt{test\_unit\_ready} signal to check if the device is ready to communicate.
+
+ 
+\end{enumerate}
+
 
 An overview of the file tree of the USB device is the following:
 
@@ -163,8 +212,54 @@ The program enumerates the file tree and will read out the contents of each file
 
 \subsubsection{Results}
 
-Figure ... shows the results of reading the file tree and the file contents of the device. From the initial results, it looks like the WASI implementation has a lower average latency, while having a higher (verschil). This is an odd result, as one would expect the native version to be faster. However, there is an explanation for this behaviour. The test setup will read the file contents of the device 100 times and measure each duration. To thoroughly test the USB API, all content data will be read and will eventually be kept in memory. This results in a lot of memory usage. The memory model of \textit{native} Rust will allocate memory when necessary and deallocate when a value goes out of scope. This will result in a lot of \texttt{malloc} and \texttt{free} calls. The memory model of \texttt{WASI} Rust is different. As stated in the documentation of Wasmtime's \texttt{Store}: `A Store is intended to be a short-lived object in a program. No form of GC is implemented at this time so once an instance is created within a Store it will not be deallocated until the Store itself is dropped.' \cite{wasmtime_store}. This means that there will be significantly less \texttt{malloc}s and \texttt{free}s for the program running in Wasmtime
+Figure \ref{fig:mass_storage_latency_naive} shows a boxplot with the results of reading the file tree and file contents of the device. With a lower average and median, the \acrshort{WASI} program seems to outperform the native program. The average execution time of the native program is 12\% slower than the \acrshort{WASI} program, the median execution time is 18\% slower. This is odd, as one would expect the native version to be faster.
 
+However, there is an explanation for this behaviour. The program will read out the entire contents of the disk, which is in total around 3GB. Each file will be loaded into memory and immediately discarded. The disk contains a few files with a size of over 500MB. Loading these files into memory becomes expensive due to the amount of \texttt{malloc}s that need to happen. Profiling the code shows more insights.
+
+The code is compiled in debug mode so debug symbols are added to both programs, so we can interpret the system calls easier. This will lead to a significantly slower running program, especially for the \acrshort{WASI} program. This is not a problem as the profiling is only used to measure memory usage and not speed. The sample size is also lowered to 10 samples instead of 1000.
+
+Figure \ref{fig:malloc_instruments} shows the total time spent on \texttt{malloc} for the native program. 25\% of the execution time was spent on allocating memory, which is a significant amount. Figure \ref{fig:malloc_wasi_instruments} shows that the \acrshort{WASI} program only spends 0,6\% of its execution time on \texttt{malloc} and therefore does not have this issue. This happens because of the way a \texttt{Store} works in Wasmtime: \say{A Store is intended to be a short-lived object in a program. No form of GC is implemented at this time so once an instance is created within a Store it will not be deallocated until the Store itself is dropped.} \cite{wasmtime_store}. Because no memory is freed, the already-allocated memory can be reused, avoiding extra \texttt{malloc} and \texttt{free} calls. A Wasmtime \texttt{Store} therefore can act as a memory pool, which can be significantly faster than using \texttt{malloc} \cite{memory_pool_wikipedia}.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/malloc_screenshot.png}
+  \caption{approx. 25\% of the native program execution time is spent on \texttt{malloc}}
+  \label{fig:malloc_instruments}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/malloc_wasi_screenshot.png}
+  \caption{approx. 0.6\% of the \acrshort{WASI} program execution time is spent on \texttt{malloc}}
+  \label{fig:malloc_wasi_instruments}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/mass_storage_1000_runs_naive.png}
+  \caption{Latency of reading data from Arduino using read-bulk}
+  \label{fig:mass_storage_latency_naive}
+\end{figure}
+
+
+
+\subsubsection{Improving results}
+
+To make a better measurement at the latency of the \acrshort{USB} \acrshort{API}, the test has been modified. Instead of the test running multiple times in the guest code, the guest component runs multiple times. Each time, a new \texttt{Store} will be created. This will let the memory allocation behave similar to the native program.
+
+Figure \ref{fig:mass_storage_latency_optimized} shows a boxplot with the new measurements. The measurements of the native program are the same as in Figure \ref{fig:mass_storage_latency_naive}. The average \acrshort{WASI} program execution time is 4,2\% slower than the average native program, and the median 4,3\% slower. The \acrshort{WASI} program also has more outliers, indicating that the performance of the \acrshort{WASI} program may be less consistent.
+
+Based on these results, we can conclude that running the code using the \acrshort{WASI} \acrshort{USB} \acrshort{API} introduces a small amount of overhead.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{images/mass_storage_1000_runs_optimized.png}
+  \caption{Latency of reading data from Arduino using read-bulk}
+  \label{fig:mass_storage_latency_optimized}
+\end{figure}
 
 \subsection{Memory Usage}
  
+ 
+ ;
