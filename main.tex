@@ -138,6 +138,10 @@
 \definecolor{softpink}{RGB}{255, 153, 204}
 \definecolor{softpurple}{RGB}{153, 102, 204}
 \definecolor{lightgray}{RGB}{211, 211, 211}
+\definecolor{darkblue}{RGB}{0, 0, 80}
+
+\let\oldtexttt\texttt
+\renewcommand{\texttt}[1]{\textcolor{darkblue}{\oldtexttt{#1}}}
 
 %
 %  END OF HEADER

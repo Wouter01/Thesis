@@ -43,7 +43,7 @@ right stick: x: 128 y: 128,
 l2: 255,
 r2: 172
 \end{verbatim}
-\caption{Output after reading controller state}
+\caption{Output after reading controller state.}
 \label{code:wasi_controller_sample_output}
 \end{code}
 
@@ -72,7 +72,7 @@ Tests were performed to evaluate the performance of the API. In these tests, tes
 \hline
 \end{array}
 \]
-\caption{The hardware used for testing the performance of the API}
+\caption{The hardware used for testing the performance of the API.}
 \label{table:test_hardware}
 \end{table}
 
@@ -85,7 +85,7 @@ Tests were performed to evaluate the performance of the API. In these tests, tes
 \textbf{USB Library} & libusb 1.0.27, Rusb 0.9.4 \\ \hline
 \textbf{Rust Version} & rustc 1.78.0 \\ \hline
 \end{tabular}
-\caption{Software Environment}
+\caption{Software Environment.}
 \label{table:software_environment}
 \end{table}
 
@@ -115,7 +115,7 @@ Figure \ref{fig:arduino_reading_latency_boxplot} shows a boxplot of the latencie
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/arduino_latency_boxplot.png}
-  \caption{Latency of reading data from Arduino using read-bulk}
+  \caption{Latency of reading data from Arduino using read-bulk.}
   \label{fig:arduino_reading_latency_boxplot}
 \end{figure}
 
@@ -131,7 +131,7 @@ Figure \ref{fig:arduino_reading_latency_boxplot} also contains outliers, marked 
 \textbf{Amount of Outliers (\textgreater 2000)} & 747 & 1058 \\ \hline
 \textbf{Percentage of Total} & 0.07\% & 0.10\% \\ \hline
 \end{tabular}
-\caption{Comparison of Latency Outliers between Native and WASI}
+\caption{Comparison of Latency Outliers between Native and WASI.}
 \label{table:latency_comparison}
 \end{table}
 
@@ -145,7 +145,7 @@ The second peak is more nuanced. Table \ref{table:arduino_output} shows a snippe
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/reading_data_latency.png}
-  \caption{Latency of reading data from Arduino using read-bulk}
+  \caption{Latency of reading data from Arduino using read-bulk.}
   \label{fig:arduino_reading_latency}
 \end{figure}
 

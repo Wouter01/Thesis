@@ -55,7 +55,7 @@ Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened dur
 		4 April 2024 & Presentation \cite{wasi_meeting_notes} of proposal in WASI meeting. Proposal has moved to phase 1 \\
 		\bottomrule
 	\end{tabular}
-	\caption{Timeline of events related to the USB proposal in the WASI repository}
+	\caption{Timeline of events related to the USB proposal in the WASI repository.}
 	\label{tab:wasi_usb_proposal}
 \end{table}
 
@@ -72,7 +72,7 @@ The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoi
 
 \begin{code}
 \lstinputlisting[breaklines, language=wit]{WIT/wit/world.wit}
-\caption{\texttt{imports} World}
+\caption{\texttt{imports} world.}
 \label{code:world}
 \end{code}
 
@@ -83,7 +83,7 @@ The \texttt{device-handle} resource will contain all the functions which require
 
 \begin{code}
 \lstinputlisting[breaklines, language=wit]{WIT/wit/device.wit}
-\caption{\texttt{usb} interface}
+\caption{\texttt{usb} interface.}
 \label{code:usb_interface}
 \end{code}
 
@@ -109,7 +109,7 @@ package component:usb@0.2.0;
 	update: func() -> device-connection-event;
 }
 \end{lstlisting}
-\caption{\texttt{events} interface}
+\caption{\texttt{events} interface.}
 \label{code:events_interface}
 \end{code}
 
