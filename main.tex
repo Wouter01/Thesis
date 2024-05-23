@@ -130,6 +130,15 @@
 
 \renewcommand{\lstlistlistingname}{List of Code Snippets}
 
+\usepackage{xcolor}
+\definecolor{commentgreen}{RGB}{2,112,10}
+\definecolor{softblue}{RGB}{102, 153, 204}
+\definecolor{mutedgreen}{RGB}{119, 136, 153}
+\definecolor{softorange}{RGB}{255, 128, 0}
+\definecolor{softpink}{RGB}{255, 153, 204}
+\definecolor{softpurple}{RGB}{153, 102, 204}
+\definecolor{lightgray}{RGB}{211, 211, 211}
+
 %
 %  END OF HEADER
 %  The actual latex document content starts here.
@@ -145,15 +154,33 @@
 \include{chapters/4_extended_abstract}
 
 \include{chapters/1_acknowledgment}
-\include{chapters/2_disclaimer}
 \include{chapters/0_bruikleen}
+\include{chapters/2_disclaimer}
+
+\lstdefinelanguage{wit}{
+    keywords=[1]{use, package, resource, func, enum, flags, record, static, world, import, export, variant},
+    keywords=[2]{result, list, tuple, option, borrow},
+    keywords=[3]{u8, u16, u64, u32, s32, string},
+    sensitive=true,
+    morecomment=[l]{//},
+    morestring=[b]",
+    morestring=[b]',
+    keywordstyle=[1]\color{teal}\bfseries,
+    keywordstyle=[2]\color{commentgreen}\bfseries,
+    keywordstyle=[3]\color{softorange},
+    identifierstyle=\color{black},
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    moredelim=**[is][\color{violet}]{|}{|},
+    moredelim=**[is][\color{teal}]{~}{~}
+}
 
 \tableofcontents\newpage
 \listoffigures\newpage
 \listoftables\newpage
 \include{chapters/5_list_of_acronyms}
-
- \lstlistoflistings 
+\lstlistoflistings 
 
 % \listoflistings\newpage
 

@@ -30,7 +30,7 @@ To achieve a small program, which is often critical for quickly loading websites
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/WebAssembly-high-level-architecture.png}
-  \caption{Wasm internals \cite{wasm_vulnerabilities}}
+  \caption{Wasm internals. \cite{wasm_vulnerabilities}}
   \label{fig:wasm_high_level}
 \end{figure}
 
@@ -68,22 +68,22 @@ As briefly described in subsection \ref{section:thecomponentmodel}, the \acrfull
 A world can be seen as the entrypoint of a component: it contains all the imports and exports of a component. Interfaces and functions can be imported and exported. Exports are what the component provides for other components. Imports are interfaces or functions the component requires. Imports may come from the component itself or from others. Finally, a world can also include another world, essentially being a superset of that world and using all its imports and exports.
 
 A world can also reference interfaces of other packages. For example, the following code snippet imports and exports the interface \texttt{incoming-handler} of package \texttt{wasi:http}:
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 world http-proxy {
     export wasi:http/incoming-handler;
     import wasi:http/outgoing-handler;
 }
-\end{verbatim}
+\end{lstlisting}
 
 The example file uses the world \texttt{resource-aggregates}. It imports the \texttt{test} interface, which is described in the same file. This means that the interface is included in that specific world. This is necessary, because a wit file can contain multiple worlds, which may not all use the same interfaces. The world will also export the \texttt{test} interface. This means that other components can interact with this component by using the types and functions in the \texttt{test} interface.
 
 \paragraph{Interface}
 An interface is a group of types and functions. An interface can represent a certain feature in a library or semantically group a set of elements together. Interfaces declared in other packages can also be used in an interface. This can be done by using the \texttt{use} syntax:
-\begin{verbatim}
-interface test {
+\begin{lstlisting}[language=wit]
+~interface~ test {
   use wasi:http/incoming-handler@0.2.0{handle};
 }
-\end{verbatim}
+\end{lstlisting}
 
 In this example:
 \begin{itemize}
@@ -103,42 +103,42 @@ The WIT language offers a handful of types, which can be defined in two parts:
 \item User-defined types: These types are built on top of the primitive types provided by WIT. WIT provides different data structures to define custom types:
 \begin{itemize}
 \item \texttt{enum}: An enum in WIT is a classic enum type, equivalent to C-style enums:
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 enum color {
-  blue
-  green
-  yellow
+  |blue|
+  |green|
+  |yellow|
 }
-\end{verbatim}
+\end{lstlisting}
 
 \item \texttt{variant}: Variants are similar to enums, but can have data added to each case. It can be thought of as a combination of an enum and a union.
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 variant file-tree-item {
-  file(file),
-  folder(string, list<file>),
-  symlink(string)
+  |file|(file),
+  |folder|(string, list<file>),
+  |symlink|(string)
 }
-\end{verbatim}
+\end{lstlisting}
 
 \item \texttt{record}: Records are equivalent to C structs. They contain a set of fields, each having a name and a type. A record only contains data, and cannot have functions.
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 record file {
   id: string,
   name: string,
   contents: data,
   headers: list<header>
 }
-\end{verbatim}
+\end{lstlisting}
 
 \item \texttt{flags}: The \texttt{flags} type is an efficient representation of multiple boolean values. It will use a bitset to represent the values.
 
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 flags file-permissions {
-  read,
-  write,
-  execute
+  |read|,
+  |write|,
+  |execute|
 }
-\end{verbatim}
+\end{lstlisting}
 
 \end{itemize}
 \end{itemize}
@@ -148,9 +148,9 @@ flags file-permissions {
 A WIT function is equivalent to functions in regular languages. It can contain parameters and a return value.
 In this example, the function \texttt{lookup} takes parameters \texttt{store} of type \texttt{kv-store} and \texttt{key} of type \texttt{string}. It will return an optional \texttt{string}.
 
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 lookup: func(store: kv-store, key: string) -> option<string>;
-\end{verbatim}
+\end{lstlisting}
 
 \paragraph{Resources}
 A resource is a handle to an object in another component. The resource contains functions that are callable upon the associated object. Calling a function on the resource is equivalent to calling a function on an existential type, a concept seen in other languages like Rust or Haskell \cite{haskell_existential}. An existential type implements the resource requirements, but the type is not known. This makes resources different from other WIT types: instead of passing data around, they allow components to \textit{access} objects from other components.
@@ -159,19 +159,19 @@ In the example below, the resource \texttt{file-handle} contains 5 functions, wh
 \begin{itemize}
 
 \item static functions: functions \texttt{constructor} and \texttt{default} are static functions. These do not have a reference to an instance of the resource, but are equivalent to regular functions, except that they are namespaced under \texttt{file-handle}. The \texttt{constructor} function will create a new instance of the type and is just syntactic sugar for a regular static function:
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 equiv-to-constructor: static func(file: file) -> file-handle
-\end{verbatim}
+\end{lstlisting}
 
 \item instance functions: \texttt{read}, \texttt{seek} and \texttt{write} are instance functions and are called on an already-existing instance which conforms to the resource. An instance function can be desugared into
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 seek: func(self: borrow<file-handle>, offset: s32) -> u32;
-\end{verbatim}
+\end{lstlisting}
 
 \end{itemize}
 
  
-\begin{verbatim}
+\begin{lstlisting}[language=wit]
 resource file-handle {
     constructor(file: file);
     read(n: u32) -> result<list<u8>, handle-error>;
@@ -180,7 +180,7 @@ resource file-handle {
     
     default: static func() -> file-handle;
 }
-\end{verbatim}
+\end{lstlisting}
 
 
 \subsection{Milestones}
