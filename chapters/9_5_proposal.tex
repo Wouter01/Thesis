@@ -82,7 +82,62 @@ The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contain
 The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types (see \ref{section:transfer_types}): \texttt{read-interrupt}, \texttt{write-interrupt}, etc. All functions in \texttt{device-handle} are closely related to similar LibUSB functions \cite{libusb_docs}. \\
 
 \begin{code}
-\lstinputlisting[breaklines, language=wit]{WIT/wit/device.wit}
+\begin{lstlisting}[breaklines, language=wit, tabsize=2]
+package component:usb@0.2.0;
+
+~interface~ usb {
+	use types.{usb-error};
+	use descriptors.{configuration-descriptor, device-descriptor};
+
+	type duration = u64;
+
+	resource usb-device {
+		// Get a list of all configurations of the USB device.
+		configurations: func() -> result<list<configuration-descriptor>, usb-error>;
+
+		device-descriptor: func() -> device-descriptor;
+
+		// Open the device. If successfull, this will return a device handle which can be used to interact with the device.
+		open: func() -> result<device-handle, usb-error>;
+
+		// Get a list of all USB devices the guest is allowed to access.
+		enumerate: static func() -> list<usb-device>;
+	}
+
+	resource device-handle {
+		reset: func() -> result<_, usb-error>;
+		active-configuration: func() -> result<u8, usb-error>;
+
+		select-configuration: func(configuration: u8) -> result<_, usb-error>;
+
+		// **Interfaces**
+
+		// Claim an interface.
+		// Claiming an interface can fail. For example, the operating system might not allow claiming the interface.
+		claim-interface: func(%interface: u8) -> result<_, usb-error>;
+
+		// Release an interface.
+		release-interface: func(%interface: u8);
+
+		// Select an alternate interface.
+		select-alternate-interface: func(%interface: u8, setting: u8) -> result<_, usb-error>;
+
+		// **Reading & Writing**
+
+		read-interrupt: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
+		write-interrupt: func(...) -> result<u64, usb-error>;
+
+		read-bulk: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
+		write-bulk: func(...) -> result<u64, usb-error>;
+
+		read-isochronous: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
+		write-isochronous: func(...) -> result<u64, usb-error>;
+
+		read-control: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
+		write-control: func(...) -> result<u64, usb-error>;
+	}
+}
+\end{lstlisting}
 \caption{\texttt{usb} interface.}
 \label{code:usb_interface}
 \end{code}
