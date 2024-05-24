@@ -1,4 +1,12 @@
 \chapter{Conclusion}
 
+The \acrfull{WASI} is rapidly progressing. While still in development, the initial vision of the people behind the Bytecode Alliance is coming to life and will hopefully get to a stable state in the coming years. This masters thesis has done research on the possibilities of utilizing \acrshort{USB} devices in \acrshort{WASI} and will hopefully make a positive impact on the eventual support of it. 
 
+The proposal that was developed over the year, together with the initial working implementation in Wasmtime, has dug through most of the questions and issues that one would expect when developing such an \acrshort{API}. While the proposal still has a long way to go, it has laid out the fundamentals of the \acrshort{API} which can be expanded further upon.
+
+One of the most prevalent questions was how access control, one of the prime features of \acrshort{WASI}, could be integrated in the \acrshort{API}. After trying out multiple possiblities, it was concluded that limiting access control on a device-level is deemed enough. The idea is also implemented in the implementation and works. The proposal also contains directions for adding access control to other parts of the interface, should this be needed.
+
+Multiple \acrshort{API} designs were tested out, one leaning more to what libusb offers, while the other leaning more into WebUSB. After trying out both \acrshort{API}s and getting feedback from the community, an \acrshort{API} which closely follows libusb was chosen. This \acrshort{API} is more aligned with how \acrshort{USB} devices work internally. This also makes it easier for existing programs using libusb to port their code over to \acrshort{WASI} \acrshort{USB}.
+
+Performance of the \acrshort{API} has been thoroughly tested and results are mixed. \acrfull{Wasm} is fast enough to not have notable performance issues when using the \acrshort{USB} \acrshort{API}, especially when compared to the latency of communicating with an external device. However, due to the isolated memory of \acrshort{WASI} components, data sent from and to a device needs to be copied, bringing in memory overhead. This becomes an extra problem for devices that stream a lot of data.
 
