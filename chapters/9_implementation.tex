@@ -36,7 +36,7 @@ When creating the \acrshort{PoC} implementation, a \acrshort{Wasm} runtime must 
 The implementation is written in Rust \cite{rust_lang}, a system-level programming langauge which focuses on performance and safety. Rust's performance is similar to that of C, but its design eliminates entire classes of memory related bugs. Rust was an easy choice, as it has great support for \acrshort{Wasm} and \acrshort{WASI}, and Wasmtime is also written in it.
 
 \subsection{Interfacing with LibUSB}
-As told in section \ref{section:libusb}, LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb \cite{rusb} package is used, which acts as a thin Rust wrapper around the LibUSB C API.
+As told in Section \ref{section:libusb}, LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb \cite{rusb} package is used, which acts as a thin Rust wrapper around the LibUSB C API.
 
 \subsection{Interfacing with Wasmtime}
 Wasmtime can be used in two ways: 
@@ -140,7 +140,7 @@ impl UsbDemoApp {
 \end{code}
 
 \subsection{Conforming to the \acrshort{WIT} interface}
-The runtime must conform to the \acrshort{WIT} interface described in section \ref{section:usb_proposal}. This part of the code \textit{receives} requests from guest components using the interface. The communication between the host and a component happens through the canonical ABI \cite{canonical_abi}. As discussed in section \ref{section:thecomponentmodel}, bindings can be used to ease the translation from and to the canonical ABI format. Wasmtime offers the \texttt{bindgen} macro \cite{wasmtime_component_bindgen} to generate such bindings in Rust.
+The runtime must conform to the \acrshort{WIT} interface described in Section \ref{section:usb_proposal}. This part of the code \textit{receives} requests from guest components using the interface. The communication between the host and a component happens through the canonical ABI \cite{canonical_abi}. As discussed in Section \ref{section:thecomponentmodel}, bindings can be used to ease the translation from and to the canonical ABI format. Wasmtime offers the \texttt{bindgen} macro \cite{wasmtime_component_bindgen} to generate such bindings in Rust.
 
 The usage of the \texttt{bindgen} macro is shown in code snippet \ref{code:wit_bindgen}.
 This macro will generate Rust types and traits that represent their \acrshort{WIT} counterparts. The host must conform to all these traits. Otherwise, adding the \acrshort{USB} \acrshort{WIT} interface to the linker will be disallowed.
@@ -244,7 +244,7 @@ The current host implementation works on Linux, macOS and Windows. However, some
 \end{itemize}
 
 \section{Usage in guest components}
-This section demonstrates how a \acrshort{WASI} component can use the \acrshort{USB} \acrshort{API}. Parts of the code used for the program in section \ref{section:functional_evaluation} will be explained.
+This section demonstrates how a \acrshort{WASI} component can use the \acrshort{USB} \acrshort{API}. Parts of the code used for the program in Section \ref{section:functional_evaluation} will be explained.
 
 \subsection{Defining a \acrshort{WIT} interface}
 The guest component is required to also provide a \acrshort{WIT} interface, shown in code snippet \ref{code:guest_world}. The interface contains a single \texttt{root} world, describing the imports and exports required by the component. The guest component explained here is a Command component (\ref{section:component_kinds}), and therefore does not need to provide any exports. In order to use the \acrshort{USB} \acrshort{API}, it will import all the interfaces of the \acrshort{USB} component.\\

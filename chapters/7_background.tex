@@ -6,7 +6,7 @@ In this thesis, the focus is on the software side of the USB standard. Therefore
 
 \section{Transferring Data via USB}
 
-This subsection introduces the internals of the USB protocol. For more information, take a look at \href{https://www.beyondlogic.org/usbnutshell/usb1.shtml}{USB in a NutShell} \footnote{https://www.beyondlogic.org/usbnutshell/usb1.shtml}.
+This section introduces the internals of the USB protocol. For more information, take a look at \href{https://www.beyondlogic.org/usbnutshell/usb1.shtml}{USB in a NutShell} \footnote{https://www.beyondlogic.org/usbnutshell/usb1.shtml}.
 \subsection{Pipes}
 Data is transferred through pipes. A pipe is a connection from the host controller to the endpoint. Not all pipes are the same: they differ in the bandwidth they support, which transfer types are supported, in which direction data can flow, and their packet and buffer size. Pipes can generally be split up into two kinds.
 
@@ -72,7 +72,7 @@ The interface descriptor provides information such as the interface number, the 
 
 Endpoints are the communication channels through which data is transmitted between the host device and the USB device.
 
-The endpoint descriptor provides information such as the endpoint address, transfer speed, transfer type (see section \ref{section:transfer_types}), etc.
+The endpoint descriptor provides information such as the endpoint address, transfer speed, transfer type (see Section \ref{section:transfer_types}), etc.
 
 Each endpoint can have any transfer type, except for endpoint zero. The zero endpoint is assumed to be a control endpoint, and will have a control transfer type. Endpoint zero will be used to communicate with the device to get its descriptors.
 
