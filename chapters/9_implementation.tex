@@ -15,7 +15,7 @@ Figure \ref{fig:implementation_overview} shows the series of calls that happen i
 \item Close the device.
 \end{enumerate}
 
-Under the hood a lot more is happening, which can be seen in the figure. Most calls can be forwarded to LibUSB, which will handle OS-specific behaviour. Some steps, like opening a device, require some extra work in the runtime.
+Under the hood a lot more is happening, which can be seen Figure \ref{fig:implementation_overview}. Most calls can be forwarded to LibUSB, which will handle OS-specific behaviour. Some steps, like opening a device, require some extra work in the runtime.
 
 On the left side of the figure are the function calls to LibUSB shown. On the right side are the calls shown from and to the \acrshort{Wasm} guest. The function names are of the format \texttt{wit\_interface.\{function\_name\_in\_interface\}}.
 
@@ -88,8 +88,8 @@ Code snippet \ref{code:start_component} shows how the passed in component will g
 \item \texttt{Engine}: An engine manages and compiles Wasm modules.
 \item \texttt{Linker}: A linker is used to link components. Each component defines imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
 \item \texttt{Component}: Used to represent a \acrshort{WASI} component.
-\item \texttt{Store}: \say{A Store is a collection of WebAssembly instances and host-defined state.
-All WebAssembly instances and items will be attached to and refer to a Store. For example instances, functions, globals, and tables are all attached to a Store. Instances are created by instantiating a Module within a Store.} \cite{wasmtime_store}
+\item \texttt{Store}: A Store is a collection of WebAssembly instances and host-defined state.
+All WebAssembly instances and items will be attached to and refer to a Store. For example instances, functions, globals, and tables are all attached to a Store. Instances are created by instantiating a Module within a Store. \cite{wasmtime_store}
 \end{itemize}
 
 Next, the built-in components are added to the linker. \texttt{wasmtime\_wasi::add\_to\_linker\_async} adds all the standard Wasmtime components to the linker, such as \texttt{wasi:cli/stdout}. \texttt{Imports::add\_to\_linker} links the USB \acrshort{WIT} interface. Finally, the command component is loaded in and compiled.
@@ -220,11 +220,11 @@ Table \ref{table:allowlist} shows the four configurations that are possible. The
 \textbf{No devices specified} & no device allowed & all allowed \\
 \hline
 \end{tabular}
-\caption{Device Access Control.}
+\caption{Device access control options.}
 \label{table:allowlist}
 \end{table}
 
-\paragraph{Usage in multiple components} Exclusive access to devices is guaranteed by keeping track of the device handles. Only one \texttt{device-handle} instance may exist for each \acrshort{USB} device. \texttt{USBHostWastView} stores a set of device addresses for devices with an active \texttt{device-handle}. It does not keep track of which component uses which device. When an \texttt{device-handle} gets dropped, the device address is removed from the set and becomes available again. When a component tries opening an already-opened device, an error will be thrown. 
+\paragraph{Usage in multiple components} Exclusive access to devices is guaranteed by keeping track of the device handles. Only one \texttt{device-handle} instance may exist for each \acrshort{USB} device. \texttt{USBHostWastView} stores a set of device addresses for devices with an active \texttt{device-handle}. It does not keep track of which component uses which device. When a \texttt{device-handle} gets dropped, the device address is removed from the set and becomes available again. When a component tries opening an already-opened device, an error will be thrown. 
 
 \subsection{Platform limitations}
 \label{section:platform_limitations}

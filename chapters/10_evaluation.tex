@@ -71,9 +71,9 @@ Table \ref{table:test_hardware} shows the hardware configurations of the devices
 
 \section{Functional Evaluation}
 \label{section:functional_evaluation}
-When developing the API, it is useful to already have guest code utilizing the API to quickly iterate. The following proof of concept is one of the guest programs created to test the API. It touches on all the parts of the API: getting device updates and receiving and sending data through the USB interface. As it is a proof of concept, it does not test the performance of the API.
+When developing the API, it is useful to already have guest code utilizing the API to quickly iterate. The following proof of concept is one of the guest programs created to test the API. It touches on all parts of the API: Getting device connection and disconnection events, reading descriptors from a device, opening a device handle, reading data from the device and writing data to the device. As it is a functional evaluation, it does not test the performance of the API.
 
-The general idea of the program is to control a game controller. The program is started and observes the connected devices. Once a controller is connected that is recognized by the program, the program will connect to the controller. The state of all the controls of the device will be read, and input updates will be print out. To test sending data over the USB interface, the program will send commands to the controller to activate the rumble motors \footnote{Rumble motors are used to vibrate the controller}.
+The general idea of the program is to control a game controller. The program is started and observes the connected devices. Once a controller is connected that is recognized by the program, the program will connect to the controller. The state of all the controls of the device will be read, and input updates will be print out. To test sending data over the USB interface, the program will send commands to the controller to activate the rumble motors \footnote{Rumble motors are used to vibrate the controller}. If the program receives a disconnection event, it will stop reading data and become idle again, waiting for new connections.
 
 \subsubsection{Test Methodology}
 The code will call the event-related API to start watching for USB devices. It will get events when devices are connected or disconnected. As WASI does not support asynchronous code yet \cite{wasi_roadmap}, a form of polling is used to get device connection events. The guest code uses a single-threaded asynchronous runtime, which will often yield to get new device connection events. This way, a multi-threaded real app can be simulated.
@@ -141,7 +141,7 @@ A program has been written with LibUSB (Native) and WASI USB (Wasm). Each progra
 \end{enumerate}
 
 \subsubsection{Results}
-Figure \ref{fig:arduino_reading_latency_boxplot} shows a boxplot of the latencies of both programs. After a million measurements for each program, the median duration is exactly the same, 377μs. The average of the native program is marginally lower, being 0,2\% faster than the \acrshort{WASI} program. The whiskers and IQR of the \acrshort{WASI} program are slightly smaller, meaning a more consistent result. However, the differences in results are too small to conclude any noticeable overhead.
+Figure \ref{fig:arduino_reading_latency_boxplot} shows a boxplot of the latencies of both programs. After a million measurements for each program, the median duration is exactly the same, 377μs. The average of the native program is marginally lower, being 0.2\% faster than the \acrshort{WASI} program. The whiskers and IQR of the \acrshort{WASI} program are slightly smaller, meaning a more consistent result. However, the differences in results are too small to conclude any noticeable overhead.
 
 \begin{figure}[H]
   \centering
@@ -159,7 +159,7 @@ Figure \ref{fig:arduino_reading_latency_boxplot} also contains outliers, marked 
 \hline
  & \textbf{Native} & \textbf{WASI} \\ \hline
 \textbf{Largest Outlier (μs)} & 75618 & 83052 \\ \hline
-\textbf{Amount of Outliers (\textgreater 2000)} & 747 & 1058 \\ \hline
+\textbf{Amount of Outliers (\textgreater 2000 μs)} & 747 & 1058 \\ \hline
 \textbf{Percentage of Total} & 0.07\% & 0.10\% \\ \hline
 \end{tabular}
 \caption{Comparison of Latency Outliers between Native and WASI.}
@@ -218,32 +218,32 @@ However, it is possible that the delay of the USB protocol is smaller on devices
 \subsection{Reading files from Mass Storage device}
 \label{section:mass_storage_latency}
 
-In order to confirm that WASI does not add noticeable latency, another benchmark is performed, which reads the contents of an USB Mass Storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
+In order to confirm that WASI does not add noticeable latency, another benchmark is performed, which reads the contents of an USB mass storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
 
 \subsubsection{Test Methodology}
 A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s and is formatted with the \acrshort{MBR} partition map and the \acrshort{exFAT} file system. There are 10 files stored on the device, most of which are a few KBs in size. One file has a size of 679MB. In total, 680MB is stored on the device.
 
-The program contains a working but incomplete implementation for the \acrshort{USB} Mass Storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents from there up until a specified length.
+The program contains a working but incomplete implementation for the \acrshort{USB} mass storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents from there up until a specified length.
 
 \paragraph{\acrshort{USB} \acrshort{API} Usage}
 As the name of the specification suggests, communication with the device happens on the interfaces with the \textit{Bulk} transfer type. Some exceptions, such as the \texttt{reset} command, will use the \textit{Control} transfer type on interface zero.
 
 \paragraph{Reading drive contents}
-The \acrshort{USB} Mass Storage implementation acts as the base layer to communicate with the device. However, further abstraction is required. USB Mass Storage devices can still differ in numerous ways:
+The \acrshort{USB} mass storage implementation acts as the base layer to communicate with the device. However, further abstraction is required. USB mass storage devices can still differ in numerous ways:
 
 \begin{itemize}
 \item Partition Map: A disk is usually split up in multiple partitions. A partition map contains information about those partitions. It is located in the first sector (sector 0) of the device. Popular partition maps are the \acrfull{MBR} and the \acrfull{GPT}. The test device has a \acrfull{MBR} partition map. The Rust package \textit{mbrman} \cite{mbrman} is used to read the \acrshort{MBR} and obtain the start and end addresses of the partition which contains the file system.
 
-\item File System: The file system organizes files and their metadata in a defined format. There exist a lot of file systems, but the most popular for Mass Storage devices are \acrfull{FAT32}, \acrfull{exFAT} and \acrfull{NTFS}. The test device uses the \acrshort{exFAT} file system. The test program uses the \textit{exfat} \cite{exfat_package} Rust package to interpret the \acrshort{exFAT} partition.
+\item File System: The file system organizes files and their metadata in a defined format. There exist a lot of file systems, but the most popular for mass storage devices are \acrfull{FAT32}, \acrfull{exFAT} and \acrfull{NTFS}. The test device uses the \acrshort{exFAT} file system. The test program uses the \textit{exfat} \cite{exfat_package} Rust package to interpret the \acrshort{exFAT} partition.
 \end{itemize}
 
-Both \textit{mbrman} and \textit{exfat} use the Mass Storage implementation to read data at addresses. Code snippet \ref{code:implementation_mass_storage} shows how the Mass Storage implementation is used to read the files.
+Both \textit{mbrman} and \textit{exfat} use the mass storage implementation to read data at addresses. Code snippet \ref{code:implementation_mass_storage} shows how the mass storage implementation is used to read the files.
 
 \begin{code}
 \begin{minted}[breaklines, tabsize=4]{rust}
 
 fn main() {
-    // Open the Mass Storage device.
+    // Open the mass storage device.
     let mut device = MassStorageDevice::new()?;
     let block_length = device.capacity.block_length;
 
@@ -271,7 +271,7 @@ fn main() {
     }
 }
 \end{minted}
-\caption{Code to read files and directories from the Mass Storage device.}
+\caption{Code to read files and directories from the mass storage device.}
 \label{code:implementation_mass_storage}
 \end{code}
 
@@ -285,7 +285,7 @@ However, there is an explanation for this behaviour. The program will read out t
 
 The code is compiled in debug mode so debug symbols are added to both programs, so we can interpret the system calls easier. This will lead to a significantly slower running program, especially for the \acrshort{WASI} program. This is not a problem as the profiling is only used to measure memory usage and not speed. The sample size is also lowered to 10 samples instead of 1000.
 
-Figure \ref{fig:malloc_instruments} shows the total time spent on \texttt{malloc} for the native program. 25\% of the execution time was spent on allocating memory, which is a significant amount. Figure \ref{fig:malloc_wasi_instruments} shows that the \acrshort{WASI} program only spends 0,6\% of its execution time on \texttt{malloc} and therefore does not have this issue. This happens because of the way a \texttt{Store} works in Wasmtime: \say{A Store is intended to be a short-lived object in a program. No form of GC is implemented at this time so once an instance is created within a Store it will not be deallocated until the Store itself is dropped.} \cite{wasmtime_store}. Because no memory is freed, the already-allocated memory can be reused, avoiding extra \texttt{malloc} and \texttt{free} calls. A Wasmtime \texttt{Store} therefore can act as a memory pool, which can be significantly faster than using \texttt{malloc} \cite{memory_pool_wikipedia}.
+Figure \ref{fig:malloc_instruments} shows the total time spent on \texttt{malloc} for the native program. 25\% of the execution time was spent on allocating memory, which is a significant amount. Figure \ref{fig:malloc_wasi_instruments} shows that the \acrshort{WASI} program only spends 0.6\% of its execution time on \texttt{malloc} and therefore does not have this issue. This happens because of the way a \texttt{Store} works in Wasmtime: \say{A Store is intended to be a short-lived object in a program. No form of GC is implemented at this time so once an instance is created within a Store it will not be deallocated until the Store itself is dropped.} \cite{wasmtime_store}. Because no memory is freed, the already-allocated memory can be reused, avoiding extra \texttt{malloc} and \texttt{free} calls. A Wasmtime \texttt{Store} therefore can act as a memory pool, which can be significantly faster than using \texttt{malloc} \cite{memory_pool_wikipedia}.
 
 
 \begin{figure}[H]
@@ -315,7 +315,7 @@ Figure \ref{fig:malloc_instruments} shows the total time spent on \texttt{malloc
 
 To make a better measurement at the latency of the \acrshort{USB} \acrshort{API}, the test has been modified. Instead of the test running multiple times in the guest code, the guest component runs multiple times. Each time, a new \texttt{Store} will be created. This will let the memory allocation behave similar to the native program.
 
-Figure \ref{fig:mass_storage_latency_optimized} shows a boxplot with the new measurements. The measurements of the native program are the same as in Figure \ref{fig:mass_storage_latency_naive}. The average \acrshort{WASI} program execution time is 4,2\% slower than the average native program, and the median 4,3\% slower. The \acrshort{WASI} program also has more outliers, indicating that the performance of the \acrshort{WASI} program may be less consistent.
+Figure \ref{fig:mass_storage_latency_optimized} shows a boxplot with the new measurements. The measurements of the native program are the same as in Figure \ref{fig:mass_storage_latency_naive}. The average \acrshort{WASI} program execution time is 4.2\% slower than the average native program, and the median 4.3\% slower. The \acrshort{WASI} program also has more outliers, indicating that the performance of the \acrshort{WASI} program may be less consistent.
 
 \subsubsection{Conclusion}
 Based on these results, we can conclude that running the code using the \acrshort{WASI} \acrshort{USB} \acrshort{API} introduces a small amount of overhead. Caution must be exercised when benchmarking memory-intensive \acrshort{Wasm} programs to obtain accurate results.
@@ -323,16 +323,16 @@ Based on these results, we can conclude that running the code using the \acrshor
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/mass_storage_1000_runs_optimized.png}
-  \caption{Latency of reading the file tree and contents after changing the benchmark method. Both programs now use a similar memory allocation method leading to more accurate results. On average, the \acrshort{WASI} \acrshort{USB} implementation is approx. 4,2\% slower.}
+  \caption{Latency of reading the file tree and contents after changing the benchmark method. Both programs now use a similar memory allocation method leading to more accurate results. On average, the \acrshort{WASI} \acrshort{USB} implementation is approx. 4.2\% slower.}
   \label{fig:mass_storage_latency_optimized}
 \end{figure}
 
 \section{Memory Usage Evaluation}
 In contrast to standard \acrshort{Wasm} modules, \acrshort{WASI} components have separate memory spaces. As a result, one component cannot read or write the memory of another component \cite{memory_model}. This improves the security of the Component Model and the interoperability between components, but can also add additional memory usage due to the need of copying memory. Therefore, it is interesting to see how much impact \acrshort{WASI} has on the memory usage of a typical program.
 
-\subsection{Reading files from Mass Storage device}
+\subsection{Reading files from mass storage device}
 \label{section:reading_files_memory}
-The same test setup as \ref{section:mass_storage_latency} will be used to benchmark memory usage. Section \ref{section:mass_storage_latency} already discussed a performance issue caused by memory allocation. As this section is about the \textit{amount} of memory used, and not about the \textit{performance} of utilizing it, this problem won't be further discussed here.
+The same test setup as Section \ref{section:mass_storage_latency} will be used to benchmark memory usage. Section \ref{section:mass_storage_latency} already discussed a performance issue caused by memory allocation. As this section is about the \textit{amount} of memory used, and not about the \textit{performance} of utilizing it, this problem won't be further discussed here.
 
 \subsubsection{Test Methodology}
 \label{section:reading_files_memory_test_setup}
@@ -346,32 +346,32 @@ The program will also sleep 3 seconds before and after opening and closing the d
 
 Figure \ref{fig:mass_storage_memory_comparison} shows the differences in memory usage for both programs. As both programs consume a lot of memory, the initial Wasmtime memory usage is neglected, as it does not have a large influence on the results. The influence of initial Wasmtime memory is discussed in section \ref{section:travering_file_tree_memory}.
 
-After the initial 3 seconds of waiting time, both programs start traversing the file tree and reading the contents. It is clear that the \acrshort{WASI} program uses more memory and with more spikes. As memory is not shared, values are copied over from host to guest, increasing the memory usage. At its peak, it will use 1239MB, while the native program uses 718MB. This is 72,5\% more. This peak happens when reading in the largest file of 679MB. As the disk is mostly empty, data is stored contiguously on the disk. This improves reading performance and ensures a steady flow of data at the receiver's end. This is clearly visible in the graph for the native program, as its memory usage follows a linear function. The \acrshort{WASI} implementation contains more spikes. These spikes are likely caused by the copying of values, which rapidly allocates and deallocates memory.
+After the initial 3 seconds of waiting time, both programs start traversing the file tree and reading the contents. It is clear that the \acrshort{WASI} program uses more memory and with more spikes. As memory is not shared, values are copied over from host to guest, increasing the memory usage. At its peak, it will use 1239MB, while the native program uses 718MB. This is 72.5\% more. This peak happens when reading in the largest file of 679MB. As the disk is mostly empty, data is stored contiguously on the disk. This improves reading performance and ensures a steady flow of data at the receiver's end. This is clearly visible in the graph for the native program, as its memory usage follows a linear function. The \acrshort{WASI} implementation contains more spikes. These spikes are likely caused by the copying of values, which rapidly allocates and deallocates memory.
 
 After the contents have been read, memory usage will quickly drop for both programs. However, memory usage for the \acrshort{WASI} program will decrease slower than the native program. This mainly happens because of the memory-pool-like behavior of the \texttt{Store} \cite{wasmtime_store}, which will not deallocate memory. Memory used outside the \texttt{Store} will still get deallocated, which is why there is a memory decrease. Once the program ends the memory will get freed further.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/mass_storage_comparison.png}
-  \caption{Memory usage when traversing the file tree and reading the file contents. At the end of reading the largest file (678MB), the \acrshort{WASI} program will consume 72,5\% more memory than the native counterpart.}
+  \caption{Memory usage when traversing the file tree and reading the file contents. At the end of reading the largest file (678MB), the \acrshort{WASI} program will consume 72.5\% more memory than the native counterpart.}
   \label{fig:mass_storage_memory_comparison}
 \end{figure}
 
 
 
-\subsection{Traversing file tree from Mass Storage device}
+\subsection{Traversing file tree from mass storage device}
 \label{section:travering_file_tree_memory}
-A less memory-intensive benchmark was also performed to check how \acrshort{WASI} memory usage would compare when using less memory. This benchmark uses the same test setup as \ref{section:reading_files_memory}, except that it will not read out the file contents. The file tree has also changed and now contains 11947 files, with a total size of 3,25GB.
+A less memory-intensive benchmark was also performed to check how \acrshort{WASI} memory usage would compare when using less memory. This benchmark uses the same test setup as Section \ref{section:reading_files_memory}, except that it will not read out the file contents. The file tree has also changed and now contains 11947 files, with a total size of 3.25GB.
 
 \subsubsection{Results}
 
 Figure \ref{fig:mass_storage_file_tree_comparison} shows the results of the benchmark. The graph contains the results of the total memory usage of both programs, and also contains the \acrshort{WASI} results without the initial memory occupied by Wasmtime. This is a useful metric, as a program utilizing the \acrshort{USB} \acrshort{API} can be part of a larger piece of code, where the initial memory overhead of Wasmtime gets \textit{distributed} between all components and can be neglected.
 
-The first 3000 measurements show the memory usage from when the program is sleeping for 3 seconds, as described in \ref{section:reading_files_memory_test_setup}. The memory of both native and \acrshort{WASI} programs are similar, not accounting for the initial Wasmtime memory usage. Furthermore, the \acrshort{WASI} memory usage is slightly better at the start, but this is likely caused by applying the correction. Once the useful program code starts, memory will spike for both programs. However, the \acrshort{WASI} (corrected) program will approx. 63MB of memory, 69,8\% more than the native's 37,1 MB memory usage.
+The first 3000 measurements show the memory usage from when the program is sleeping for 3 seconds, as described in Section \ref{section:reading_files_memory_test_setup}. The memory of both native and \acrshort{WASI} programs are similar, not accounting for the initial Wasmtime memory usage. Furthermore, the \acrshort{WASI} memory usage is slightly better at the start, but this is likely caused by applying the correction. Once the useful program code starts, memory spikes for both programs. However, the \acrshort{WASI} (corrected) program consumes approx. 63MB of memory, 69.8\% more than the native's 37.1 MB memory usage.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/mass_storage_memory_filetree_with_correction.png}
-  \caption{Memory usage when traversing the file tree. The \acrshort{WASI} program consumes 69,8\% more memory than the native counterpart.}
+  \caption{Memory usage when traversing the file tree. The \acrshort{WASI} program consumes 69.8\% more memory than the native counterpart.}
   \label{fig:mass_storage_file_tree_comparison}
 \end{figure}

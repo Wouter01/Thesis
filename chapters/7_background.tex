@@ -80,7 +80,7 @@ Each endpoint can have any transfer type, except for endpoint zero. The zero end
 
 \subsection{LibUSB}
 \label{section:libusb}
-LibUSB \cite{LibUSB} is a versatile open-source library that offers platform-independent access to USB devices. Essentially, it is a thin wrapper around the system-provided USB APIs, providing a universal API. LibUSB is a C library and works on native hardware. It also works completely in user-mode, meaning no special privileges are required to communicate with USB devices. This makes it a very popular library to control USB devices, as it removes most issues that would occur when trying to support multiple platforms. It is also version-agnostic, so it will work with each USB protocol (1.0 - 4.0) \footnote{https://github.com/libusb/libusb/wiki/FAQ\#does-libusb-support-usb-3031324}
+LibUSB \cite{LibUSB} is a versatile open-source library that offers platform-independent access to USB devices. Essentially, it is a thin wrapper around the system-provided USB APIs, providing a universal API. LibUSB is a C library and works on native hardware. It also works completely in user-mode, meaning no special privileges are required to communicate with USB devices. This makes it a very popular library to control USB devices, as it removes most issues that would occur when trying to support multiple platforms. It is also version-agnostic, so it will work with each USB protocol (1.0 - 4.0) \footnote{https://github.com/libusb/libusb/wiki/FAQ\#does-libusb-support-usb-3031324}.
 
 As LibUSB makes creating cross-platform USB programs easy, it is used by most other technologies in this chapter, such as WebUSB (\ref{section:WebUSB}) and our own implementation (See Chapter \ref{chapter:implementation}).
 
