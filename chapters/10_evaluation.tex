@@ -276,7 +276,7 @@ fn main() {
 \label{code:implementation_mass_storage}
 \end{code}
 
-With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and reports each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in \acrshort{Wasmtime} using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
+With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and reports each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in Wasmtime using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
 
 \subsubsection{Results}
 
