@@ -164,17 +164,17 @@ package component:usb@0.2.0;
 
 		// **Reading & Writing**
 
-		read-interrupt: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
-		write-interrupt: func(...) -> result<u64, usb-error>;
+		read-interrupt: func(...) -> ...;
+		write-interrupt: func(...) -> ...;
 
-		read-bulk: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
-		write-bulk: func(...) -> result<u64, usb-error>;
+		read-bulk: func(...) -> ...;
+		write-bulk: func(...) -> ...;
 
-		read-isochronous: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
-		write-isochronous: func(...) -> result<u64, usb-error>;
+		read-isochronous: func(...) -> ...;
+		write-isochronous: func(...) -> ...;
 
-		read-control: func(...) -> result<tuple<u64, list<u8>>, usb-error>;
-		write-control: func(...) -> result<u64, usb-error>;
+		read-control: func(...) -> ...;
+		write-control: func(...) -> ...;
 	}
 }
 \end{lstlisting}
