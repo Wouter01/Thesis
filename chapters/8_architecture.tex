@@ -18,7 +18,7 @@ Figure \ref{image:api_areas} shows how a program using the API would look like.
 
 	\node[fit={(inner) (wasiusb) (title)}, draw] (outer) {};
 	
-	\node[mynode, below=10mm of wasiusb.south] (libusb) {LibUSB};
+	\node[mynode, below=10mm of wasiusb.south] (libusb) {libusb};
 	\node[mynode, right=10mm of libusb.east] (nativeusb) {Operating System USB API};
 
 	% connections
@@ -30,13 +30,13 @@ Figure \ref{image:api_areas} shows how a program using the API would look like.
 \label{image:api_areas}
 \end{figure}
 
-\paragraph{Guest} This is a Wasm module that is created by a user of the API. It contains code that utilizes the API to communicate with devices. The guest module is sandboxed in the Wasm runtime, meaning that it cannot access any system resources. By utilizing the WASI APIs, such as the WASI USB API, it can get access to system resources. It can communicate with the runtime implementation through the \acrshort{WIT} interface.
+\paragraph{Guest} This is a \acrshort{Wasm} module that is created by a user of the \acrshort{API}. It contains code that utilizes the \acrshort{API} to communicate with devices. The guest module is sandboxed in the \acrshort{Wasm} runtime, meaning that it cannot access any system resources. By utilizing the \acrshort{WASI} \acrshort{API}s, such as the \acrshort{WASI} \acrshort{USB} \acrshort{API}, it can get access to system resources. It can communicate with the runtime implementation through the \acrshort{WIT} interface.
 
-\paragraph{WASI USB} This is the host implementation of the WASI USB API. It acts as a bridge between native USB APIs and Wasm modules. This piece is part of the Wasm Runtime, but is not sandboxed, so it can access system resources. To do this, the code is not compiled to Wasm but is instead part of the native runtime binary. This code is platform-dependent and must ensure the exposed API works as similar as possible on each supported platform.
+\paragraph{WASI USB} This is the host implementation of the \acrshort{WASI} \acrshort{USB} \acrshort{API}. It acts as a bridge between native \acrshort{USB} \acrshort{API}s and \acrshort{Wasm} modules. This piece is part of the \acrshort{Wasm} Runtime, but is not sandboxed, so it can access system resources. To do this, the code is not compiled to \acrshort{Wasm} but is instead part of the native runtime binary. This code is platform-dependent and must ensure the exposed API works as similar as possible on each supported platform.
 
-\paragraph{LibUSB} To help the WASI USB runtime implementation having similar behavior on different platforms, LibUSB is used. LibUSB is a lightweight wrapper around native USB APIs, but abstracts them to a universal interface. By using LibUSB, the runtime implementation can be written against the LibUSB API instead of the need to provide separate implementations for each platform.
+\paragraph{libusb} To help the \acrshort{WASI} \acrshort{USB} runtime implementation having similar behavior on different platforms, libusb \cite{LibUSB} is used. libusb is a lightweight wrapper around native USB APIs, but abstracts them to a universal interface. By using libusb, the runtime implementation can be written against the libusb API instead of the need to provide separate implementations for each platform.
 
-\paragraph{Operating System USB API} Finally, LibUSB will call the native LibUSB APIs. These are provided by the Operating System kernel.
+\paragraph{Operating System USB API} Finally, libusb will call the native libusb APIs. These are provided by the Operating System kernel.
 
 % \section{\acrfull{WIT}}
 % The WIT file provides the definition of the interface between the WASI USB API and a WASM module. Languages with support for the component model provide a way to generate bindings based on the WIT interface. These bindings are used to interact in a natural way with the WIT interface.

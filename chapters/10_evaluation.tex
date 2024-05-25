@@ -129,7 +129,7 @@ One of the advantages of \acrshort{Wasm} should be that it offers near-native sp
 \subsection{Receiving data from Arduino}
 
 \subsubsection{Test Methodology}
-A program has been written with LibUSB (Native) and WASI USB (Wasm). Each program will do the following steps:
+A program has been written with libusb (Native) and \acrshort{WASI} \acrshort{USB} (\acrshort{Wasm}). Each program will do the following steps:
 
 \begin{enumerate}
 \item Enumerate the USB devices.
@@ -137,7 +137,7 @@ A program has been written with LibUSB (Native) and WASI USB (Wasm). Each progra
 \item Open the device and claim the Bulk interface.
 \item Send the \acrfull{DTR} signal to the Arduino. This signal is sent to the Arduino to acknowledge that the host device is ready to receive data. Once the Arduino has received this signal, its setup phase is completed and it will start sending data.
 \item \textit{Warm up } the interface by throwing away the first batch of readings. By doing this, initial latency is removed from the measurements.
-\item Read data from the Bulk interface, while measuring how long this operation takes. The arduino sends data in batches in 64 bytes, and the program will read them a million times. The program will throw away the read results, so only the transfer of the data is measured. In total, 64MB is received by the host.
+\item Read data from the Bulk interface, while measuring how long this operation takes. The Arduino sends data in batches in 64 bytes, and the program will read them a million times. The program will throw away the read results, so only the transfer of the data is measured. In total, 64MB is received by the host.
 \item Write durations to file.
 \end{enumerate}
 
@@ -212,7 +212,7 @@ The second peak is more nuanced. Table \ref{table:arduino_output} shows a snippe
 \label{table:arduino_output}
 \end{table}
 
-Based on the results, we can conclude that there are no measurable differences between the native and \acrshort{WASI} program. However, this is mainly caused by the delay of the USB protocol. This delay vastly outweighs the delays caused by overhead of the Wasm runtime, making the Wasm overhead negligible.
+Based on the results, we can conclude that there are no measurable differences between the native and \acrshort{WASI} program. However, this is mainly caused by the delay of the USB protocol. This delay vastly outweighs the delays caused by overhead of the \acrshort{Wasm} runtime, making the Wasm overhead negligible.
 
 However, it is possible that the delay of the USB protocol is smaller on devices more powerful than an Arduino or with a more modern USB version. With these configurations, it can be possible a small overhead for Wasm becomes visible.
 
@@ -276,7 +276,7 @@ fn main() {
 \label{code:implementation_mass_storage}
 \end{code}
 
-With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and reports each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in Wasmtime using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
+With a working implementation to read out the file tree, a benchmark can be performed. The benchmark enumerates the file tree and reads out the contents of each file, and reports each file size and name. The duration of this operation is logged. This is repeated 1000 times, so the file tree will be read out 1000 times. This is done for the program running in \acrshort{Wasmtime} using the \acrshort{USB} \acrshort{API} and a native program using Rusb \cite{rusb}.
 
 \subsubsection{Results}
 

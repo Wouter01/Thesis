@@ -7,41 +7,41 @@ When the web was born, the only supported programming language supported on the 
 In order to be a viable Javascript alternative, a new model needs to be safe, fast, portable and compact. \acrshort{Wasm} is the first new technology to check all these four boxes. \cite{bringing_the_web_up_to_speed}
 
 \subsection{Safe}
-Wasm is intended to run in various environments, with some executing Wasm code from unknown sources. The web is a prime example of such a case. In these cases, it is required that the code runs in a sandbox, so that it cannot access all resources of the device. This way, malicious code can only do harm in the sandbox, and not the entire device.
+\acrshort{Wasm} is intended to run in various environments, with some executing \acrshort{Wasm} code from unknown sources. The web is a prime example of such a case. In these cases, it is required that the code runs in a sandbox, so that it cannot access all resources of the device. This way, malicious code can only do harm in the sandbox, and not the entire device.
 
-Additionally, a Wasm program is often build in multiple modules. A Wasm module can be seen as an island of code, which imports and exports functions. Each module has its own stack, memory, types and more. This means that each module is isolated and cannot affect other modules, increasing the security of the model. Additionally, Wasm makes use of a linear memory model (Figure \ref{fig:wasm_high_level}). Each module gets its own range, and can only access that part of the memory.
+Additionally, a \acrshort{Wasm} program is often build in multiple modules. A \acrshort{Wasm} module can be seen as an island of code, which imports and exports functions. Each module has its own stack, memory, types and more. This means that each module is isolated and cannot affect other modules, increasing the security of the model. Additionally, \acrshort{Wasm} makes use of a linear memory model (Figure \ref{fig:wasm_high_level}). Each module gets its own range, and can only access that part of the memory.
 
 \subsection{Portable}
-\acrfull{Wasm} works as a compilation target for programming languages. Languages can compile to Wasm, just like they would for e.g., x86.
-To compile to Wasm, the source code is first compiled to an intermediate representation, such as the LLVM IR. This is universal and also happens when compiling to other architectures. This part of the compilation process, called the frontend, stays the same. The backend of the compilation process, where the code gets translated into machine instructions, differs per instruction set. In the backend of the compiler the code will get compiled to the Wasm instruction set and output Wasm bytecode. This binary can get executed by a Wasm runtime. (Figure \ref{fig:wasm_compiler_frontend}) The bytecode is platform-agnostic, so it can run on any hardware and operating system that has a Wasm runtime. This makes Wasm portable.
+\acrfull{Wasm} works as a compilation target for programming languages. Languages can compile to \acrshort{Wasm}, just like they would for e.g., x86.
+To compile to \acrshort{Wasm}, the source code is first compiled to an intermediate representation, such as the LLVM IR. This is universal and also happens when compiling to other architectures. This part of the compilation process, called the frontend, stays the same. The backend of the compilation process, where the code gets translated into machine instructions, differs per instruction set. In the backend of the compiler the code will get compiled to the \acrshort{Wasm} instruction set and output \acrshort{Wasm} byte code. This binary can get executed by a \acrshort{Wasm} runtime. (Figure \ref{fig:wasm_compiler_frontend}) The byte code is platform-agnostic, so it can run on any hardware and operating system that has a \acrshort{Wasm} runtime. This makes \acrshort{Wasm} portable.
 
-This general idea works great for compiled languages, such as C, Rust or Swift. However, for interpreted languages such as Python, the model will work different. On native instruction sets, interpreted languages are read at runtime by their interpreter, which is often written in C. To make this work in Wasm, the interpreter can be compiled to Wasm and can interpret the language source code, just like it would happen on a native machine.
+This general idea works great for compiled languages, such as C, Rust or Swift. However, for interpreted languages such as Python, the model will work different. On native instruction sets, interpreted languages are read at runtime by their interpreter, which is often written in C. To make this work in \acrshort{Wasm}, the interpreter can be compiled to \acrshort{Wasm} and can interpret the language source code, just like it would happen on a native machine.
 
 \subsection{Compact}
-To achieve a small program, which is often critical for quickly loading websites, Wasm acts as a stack machine instead of a register-based machine. In register-based machines, registers are used to make calculations. On stack machines, argument values and operands are pushed on the stack, and result values are popped from the stack (Figure \ref{fig:wasm_high_level}). \cite{bringing_the_web_up_to_speed} By not having the need for registers, the binary size can be made smaller \cite{stack_vs_register_machine}. Another advantage of this method is that the amount of available registers can vary on different platforms. This is not an issue with stack machines.
+To achieve a small program, which is often critical for quickly loading websites, \acrshort{Wasm} acts as a stack machine instead of a register-based machine. In register-based machines, registers are used to make calculations. On stack machines, argument values and operands are pushed on the stack, and result values are popped from the stack (Figure \ref{fig:wasm_high_level}). \cite{bringing_the_web_up_to_speed} By not having the need for registers, the binary size can be made smaller \cite{stack_vs_register_machine}. Another advantage of this method is that the amount of available registers can vary on different platforms. This is not an issue with stack machines.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/wasm_compiler.png}
-  \caption{Source code gets compiled to the Wasm architecture. The Wasm runtime executes the Wasm bytecode. \cite{docker_without_containers}}
+  \caption{Source code gets compiled to the \acrshort{Wasm} architecture. The \acrshort{Wasm} runtime executes the \acrshort{Wasm} byte code. \cite{docker_without_containers}}
   \label{fig:wasm_compiler_frontend}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{images/WebAssembly-high-level-architecture.png}
-  \caption{Wasm internals. \cite{wasm_vulnerabilities}}
+  \caption{\acrshort{Wasm} internals. \cite{wasm_vulnerabilities}}
   \label{fig:wasm_high_level}
 \end{figure}
 
 \section{\acrshort{WASI}}
 
-When writing code that compiles to Wasm, there is a need for system interfaces. These are required to do useful stuff, such as getting access to files. In the browser, WebAssembly applications can use Javascript as a system interface. However, outside the browser, there is no such predefined system interface. To solve this problem the \acrfull{WASI} was created. \acrshort{WASI} is a set of portable APIs, similar to APIs you would find in an operating system.
+When writing code that compiles to \acrshort{Wasm}, there is a need for system interfaces. These are required to do useful stuff, such as getting access to files. In the browser, WebAssembly applications can use Javascript as a system interface. However, outside the browser, there is no such predefined system interface. To solve this problem the \acrfull{WASI} was created. \acrshort{WASI} is a set of portable APIs, similar to APIs you would find in an operating system.
 
 \subsection{The Component Model}
 \label{section:thecomponentmodel}
 
-A \acrshort{Wasm} program is often build up of multiple libraries called Wasm modules. These modules need a way to talk to each other. They do this by importing and exporting functions. Imported functions are definitions of functions implemented by another Wasm module. If a module calls an imported function, it will be executed by the other module. Exported functions are functions implemented in the module that are exposed to other modules. 
+A \acrshort{Wasm} program is often build up of multiple libraries called \acrshort{Wasm} modules. These modules need a way to talk to each other. They do this by importing and exporting functions. Imported functions are definitions of functions implemented by another \acrshort{Wasm} module. If a module calls an imported function, it will be executed by the other module. Exported functions are functions implemented in the module that are exposed to other modules. 
 This form of communication is hard to use, as only functions with primitive types are allowed. Passing around more complex data structures, such as strings, lists or structs, is not possible. This is because different programming languages may have different data representations for these structures. For example, a String in Rust may be represented in another way than a String in Python.
 
 To solve this issue, the Component Model was introduced. The Component Model allows users to build applications out of reusable components. These components can be written in different programming languages. Conceptually, a component is a wrapper around a \acrshort{Wasm} module and adds an extra interface layer above the module. This interface is defined with the \acrshort{WIT} language. It does not contain logic, but only describes what a component exports and imports. The \acrshort{WIT} language offers a broader range of primitives compared to \acrshort{Wasm} primitives. For example, strings, enums (ref. variant) and structs (ref. record) can be defined in a \acrshort{WIT}. Section \ref{section:WIT} provides further elaboration on WIT.
@@ -65,7 +65,7 @@ A Reactor component is conceptually similar to a library in other programming la
 As briefly described in Section \ref{section:thecomponentmodel}, the \acrfull{WIT} contains a definition of an interface a \acrshort{WASI} component exposes. It defines this interface in worlds and interfaces. The \acrshort{WIT} does not contain an implementation, but only defines the contract between components. This section will briefly discuss the basics of the \acrshort{WIT} language.
 
 \paragraph{World}
-A world can be seen as the entrypoint of a component: it contains all the imports and exports of a component. Interfaces and functions can be imported and exported. Exports are what the component provides for other components. Imports are interfaces or functions the component requires. Imports may come from the component itself or from others. Finally, a world can also include another world, essentially being a superset of that world and using all its imports and exports.
+A world can be seen as the entry point of a component: it contains all the imports and exports of a component. Interfaces and functions can be imported and exported. Exports are what the component provides for other components. Imports are interfaces or functions the component requires. Imports may come from the component itself or from others. Finally, a world can also include another world, essentially being a superset of that world and using all its imports and exports.
 
 A world can also reference interfaces of other packages. For example, the following code snippet imports and exports the interface \texttt{incoming-handler} of package \texttt{wasi:http} \cite{wit_examples}:
 \begin{lstlisting}[language=wit]
@@ -158,7 +158,7 @@ A resource is a handle to an object in another component. The resource contains 
 In the example below, the resource \texttt{file-handle} contains 5 functions, which can be put into two categories:
 \begin{itemize}
 
-\item static functions: functions \texttt{constructor} and \texttt{default} are static functions. These do not have a reference to an instance of the resource, but are equivalent to regular functions, except that they are namespaced under \texttt{file-handle}. The \texttt{constructor} function will create a new instance of the type and is just syntactic sugar for a regular static function:
+\item static functions: functions \texttt{constructor} and \texttt{default} are static functions. These do not have a reference to an instance of the resource, but are equivalent to regular functions, except that they are name-spaced under \texttt{file-handle}. The \texttt{constructor} function will create a new instance of the type and is just syntactic sugar for a regular static function:
 \begin{lstlisting}[language=wit]
 equiv-to-constructor: static func(file: file) -> file-handle
 \end{lstlisting}

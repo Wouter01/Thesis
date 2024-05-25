@@ -15,28 +15,28 @@ Figure \ref{fig:implementation_overview} shows the series of calls that happen i
 \item Close the device.
 \end{enumerate}
 
-Under the hood a lot more is happening, which can be seen Figure \ref{fig:implementation_overview}. Most calls can be forwarded to LibUSB, which will handle OS-specific behaviour. Some steps, like opening a device, require some extra work in the runtime.
+Under the hood a lot more is happening, which can be seen Figure \ref{fig:implementation_overview}. Most calls can be forwarded to libusb, which will handle OS-specific behavior. Some steps, like opening a device, require some extra work in the runtime.
 
-On the left side of the figure are the function calls to LibUSB shown. On the right side are the calls shown from and to the \acrshort{Wasm} guest. The function names are of the format \texttt{wit\_interface.\{function\_name\_in\_interface\}}.
+On the left side of the figure are the function calls to libusb shown. On the right side are the calls shown from and to the \acrshort{Wasm} guest. The function names are of the format \texttt{wit\_interface.\{function\_name\_in\_interface\}}.
 
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{images/sequentiediagram.png}
-  \caption{Typical series of events sent between Wasm module - Wasmtime - LibUSB.}
+  \caption{Typical series of events sent between Wasm module - Wasmtime - libusb.}
   \label{fig:implementation_overview}
 \end{figure}
 
 
 \section{Runtime Implementation}
-One of the requirements when proposing a new \acrshort{WASI} \acrshort{API} is to have multiple runtime implementations of that \acrshort{API}. This is required in order to advance to phase 3 of a proposal. The \acrshort{USB} \acrshort{WASI} proposal is still at phase 1. However, having a working implementation of the developing \acrshort{API} makes it easier to test out ideas and spot issues quickly. It also is useful to determine the viablity of the \acrshort{API}. Therefore, a runtime implementation has been created before the proposal process had started.
+One of the requirements when proposing a new \acrshort{WASI} \acrshort{API} is to have multiple runtime implementations of that \acrshort{API}. This is required in order to advance to phase 3 of a proposal. The \acrshort{USB} \acrshort{WASI} proposal is still at phase 1. However, having a working implementation of the developing \acrshort{API} makes it easier to test out ideas and spot issues quickly. It also is useful to determine the viability of the \acrshort{API}. Therefore, a runtime implementation has been created before the proposal process had started.
 
-When creating the \acrshort{PoC} implementation, a \acrshort{Wasm} runtime must be chosen which will be extended by the \acrshort{API}. There are numerous \acrshort{Wasm} runtimes available, such as Wasmtime \cite{wasmtime_website}, Wasmer \cite{wasmer} or WasmKit \cite{wasmkit}. Wasmtime was chosen for implementing the \acrshort{PoC}, as it has support for the Component Model and it is developed by the Bytecode Alliance, the organization behind \acrshort{WASI}.
+When creating the \acrshort{PoC} implementation, a \acrshort{Wasm} runtime must be chosen which will be extended by the \acrshort{API}. There are numerous \acrshort{Wasm} runtimes available, such as Wasmtime \cite{wasmtime_website}, Wasmer \cite{wasmer} or WasmKit \cite{wasmkit}. Wasmtime was chosen for implementing the \acrshort{PoC}, as it has support for the Component Model and it is developed by the Bytecode Alliance \cite{bytecode_alliance}, the organization behind \acrshort{WASI}.
 
 \subsection{Choosing the programming language}
-The implementation is written in Rust \cite{rust_lang}, a system-level programming language which focuses on performance and safety. Rust's performance is similar to that of C, but its design eliminates entire classes of memory related bugs. Rust was an easy choice, as it has great support for \acrshort{Wasm} and \acrshort{WASI}, and Wasmtime is also written in it.
+The implementation is written in Rust \cite{rust_lang}, a system-level programming language which focuses on performance and safety. Rust's performance is similar to that of C, but its design eliminates entire classes of memory related bugs. Rust was an easy choice, as it has great support for \acrshort{Wasm} and \acrshort{WASI}, and Wasmtime is also written in it \cite{wasmtime_website}.
 
-\subsection{Interfacing with LibUSB}
-As told in Section \ref{section:libusb}, LibUSB will be used to communicate with operating-specific APIs to communicate with USB devices. LibUSB is written in C. It is possible to interface with C in Rust. To make things easier, the Rusb \cite{rusb} package is used, which acts as a thin Rust wrapper around the LibUSB C API.
+\subsection{Interfacing with libusb}
+As told in Section \ref{section:libusb}, libusb will be used to communicate with operating-specific \acrshort{API}s to communicate with \acrshort{USB} devices. libusb is written in C \cite{LibUSB}. It is possible to interface with C in Rust. To make things easier, the Rusb \cite{rusb} package is used, which acts as a thin Rust wrapper around the libusb C \acrshort{API}.
 
 \subsection{Interfacing with Wasmtime}
 Wasmtime can be used in two ways: 
@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
 Code snippet \ref{code:start_component} shows how the passed in component will get instantiated. The \texttt{main} function first calls the \texttt{new} function. This function creates some necessary objects: 
 \begin{itemize}
 \item \texttt{Config}: The configuration used when creating a new \texttt{Engine}.
-\item \texttt{Engine}: An engine manages and compiles Wasm modules.
+\item \texttt{Engine}: An engine manages and compiles \acrshort{Wasm} modules.
 \item \texttt{Linker}: A linker is used to link components. Each component defines imports and exports. The linker is used to resolve these imports and exports, and throw errors if the required imports cannot be resolved.
 \item \texttt{Component}: Used to represent a \acrshort{WASI} component.
 \item \texttt{Store}: A Store is a collection of WebAssembly instances and host-defined state.
@@ -172,7 +172,7 @@ Code snippet \ref{code:conforming_example} shows an example usage of the generat
 \item \textbf{\texttt{Resource<DeviceHandle>}} is a reference to an \texttt{DeviceHandle} instance. 
 \end{itemize}
 
-\texttt{DeviceHandle} has a handle that is used to call LibUSB functions. In this example, the \texttt{claim\_interface} function will call the equivalent LibUSB function and return its result.\\
+\texttt{DeviceHandle} has a handle that is used to call libusb functions. In this example, the \texttt{claim\_interface} function will call the equivalent libusb function and return its result.\\
 
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}
@@ -238,7 +238,7 @@ The current host implementation works on Linux, macOS and Windows. However, some
 
 \item Windows:
 \begin{itemize}
-\item LibUSB hotplug support is currently missing for Windows. This feature is used in the implementation to get device connection events. Recent activity shows that this might come soon \cite{libusb_hotplug_support}.
+\item libusb hotplug support is currently missing for Windows. This feature is used in the implementation to get device connection events. Recent activity shows that this might come soon \cite{libusb_hotplug_support}.
 \item HID keyboards and mice cannot be accessed using the native HID driver as Windows reserves exclusive access to them \cite{libusb_windows_limitations}. 
 \end{itemize}
 \end{itemize}

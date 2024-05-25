@@ -1,9 +1,9 @@
 \chapter{Proposal}
 
 \section{Standardization}
-The goal of this master's thesis is to extend the WASI standard with a new USB API. In order to do this, the API must go through a standardization process. This way, a consensus can be made about how the API should work, which platforms it will work on, and what its scope is. When gone through the proposal, one universal API can be offered that is supported by all runtimes which are WASI-compliant.
+The goal of this master's thesis is to extend the \acrshort{WASI} standard with a new \acrshort{USB} \acrshort{API}. In order to do this, the \acrshort{API} must go through a standardization process. This way, a consensus can be made about how the \acrshort{API} should work, which platforms it will work on, and what its scope is. When gone through the proposal, one universal \acrshort{API} can be offered that is supported by all runtimes which are \acrshort{WASI}-compliant.
 
-In order for the USB API to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the API. Throughout the standardization process, the proposal will go through 5 phases \cite{proposal_phases}:
+In order for the \acrshort{USB} \acrshort{API} to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the \acrshort{API}. Throughout the standardization process, the proposal will go through five phases \cite{proposal_phases}:
 
 \paragraph{Phase 0 (Pre-Proposal)}
 When there is enough interest in a proposal and the idea seems viable, the proposal gets discussed in an online WASI meeting. The person who will create the proposal explains the idea, what it would solve, and how it can and cannot be used. This is often also the first moment to get feedback from the community. Each attendee of the meeting casts a vote about the idea. If the majority of the people approve, the idea can move to Phase 1, and a proposal can be created. Champions (people that will create the proposal) get assigned to the proposal.
@@ -13,14 +13,14 @@ At the time of writing, \texttt{wasi-usb} is in Phase 1.
 \paragraph{Phase 1}
 To be able to move to phase 2, the requirements for phase 1 are worked out:
 \begin{itemize}
-\item The WIT interface gets created and documented by the champions. The WIT interface should be mostly finalized, but small changes can occur.
-\item Prototype implementations are required to evaluate the viability of the created API.
+\item The \acrshort{WIT} interface gets created and documented by the champions. The \acrshort{WIT} interface should be mostly finalized, but small changes can occur.
+\item Prototype implementations are required to evaluate the viability of the created \acrshort{API}.
 \item The portability criteria are defined:
 \begin{itemize}
-\item Portability: On which platforms should the API run, what parts of the API are available on which platform.
-\item Practicality: The proposal should demonstrate that the API can be used in real-world scenarios.
-\item Testing: Define how the API should be tested and on which devices.
-\item Implementations: In Phase 3, each proposal should have at least two implementations in different WASI runtimes. The kinds of implementations are defined here.
+\item Portability: On which platforms should the \acrshort{API} run, what parts of the \acrshort{API} are available on which platform.
+\item Practicality: The proposal should demonstrate that the \acrshort{API} can be used in real-world scenarios.
+\item Testing: Define how the \acrshort{API} should be tested and on which devices.
+\item Implementations: In Phase 3, each proposal should have at least two implementations in different \acrshort{WASI} runtimes. The kinds of implementations are defined here.
 \end{itemize}
 \end{itemize}
 
@@ -28,15 +28,15 @@ These portability criteria are defined in this phase, but get worked out in the 
 Once these requirements are met, the proposal can move to phase 2.
 
 \paragraph{Phase 2}
-During phase 2, one host implementation is created to test the API. Dependencies of the implementation should have already reached at least stage two.
+During phase 2, one host implementation is created to test the \acrshort{API}. Dependencies of the implementation should have already reached at least stage two.
 Furthermore, a plan is developed for how the portability criteria will be met.
 
 \paragraph{Phase 3}
-In Phase 3, extra implementations of the API are made in different WASI runtimes. All implementations should pass the testing defined in the portability criteria and be complete. In addition, the dependencies used in the implementation should have reached the proposal phase 3. To further test the API, Libraries and other tools that use the API are built.
+In Phase 3, extra implementations of the \acrshort{API} are made in different \acrshort{WASI} runtimes. All implementations should pass the testing defined in the portability criteria and be complete. In addition, the dependencies used in the implementation should have reached the proposal phase 3. To further test the \acrshort{API}, Libraries and other tools that use the \acrshort{API} are built.
 
 \paragraph{Phase 4 \& 5}
 
-No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not final yet. These stages finalize the standardization of the API.
+No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not final yet. These stages finalize the standardization of the \acrshort{API}.
 
 
 A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here} \footnote{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}.
@@ -79,7 +79,7 @@ This section briefly explains how the different parts of the \acrshort{API} work
 
 	\node[fit={(inner) (wasiusb) (title)}, draw] (outer) {};
 	
-	\node[mynode, below=10mm of wasiusb.south] (libusb) {LibUSB};
+	\node[mynode, below=10mm of wasiusb.south] (libusb) {libusb};
 	\node[mynode, right=10mm of libusb.east] (nativeusb) {Operating System USB API};
 
 	% connections
@@ -87,28 +87,28 @@ This section briefly explains how the different parts of the \acrshort{API} work
 	\draw [<->, very thick] (wasiusb.south) to (libusb.north);
 	\draw [<->, very thick] (libusb.east) to (nativeusb.west);
 \end{tikzpicture}
-\caption{Internals of the WASI USB API. The arrows represent communication between the different areas.}
+\caption{Internals of the \acrshort{WASI} \acrshort{USB} \acrshort{API}. The arrows represent communication between the different areas.}
 \label{image:api_areas}
 \end{figure}
 
-\paragraph{Guest} This is a Wasm module that is created by a user of the API. It contains code that utilizes the API to communicate with devices. The guest module is sandboxed in the Wasm runtime, meaning that it cannot access any system resources. By utilizing the WASI APIs, such as the WASI USB API, it can get access to system resources. It can communicate with the runtime implementation through the \acrshort{WIT} interface.
+\paragraph{Guest} This is a \acrshort{Wasm} module that is created by a user of the \acrshort{API}. It contains code that utilizes the API to communicate with devices. The guest module is sandboxed in the \acrshort{Wasm} runtime, meaning that it cannot access any system resources. By utilizing the WASI APIs, such as the \acrshort{WASI} \acrshort{USB} \acrshort{API}, it can get access to system resources. It can communicate with the runtime implementation through the \acrshort{WIT} interface.
 
-\paragraph{WASI USB} This is the host implementation of the WASI USB API. It acts as a bridge between native USB APIs and Wasm modules. This piece is part of the Wasm Runtime, but is not sandboxed, so it can access system resources. To do this, the code is not compiled to Wasm but is instead part of the native runtime binary. This code is platform-dependent and must ensure the exposed API works as similar as possible on each supported platform.
+\paragraph{WASI USB} This is the host implementation of the \acrshort{WASI} \acrshort{USB} \acrshort{API}. It acts as a bridge between native \acrshort{USB} \acrshort{API}s and \acrshort{Wasm} modules. This piece is part of the \acrshort{Wasm} Runtime, but is not sandboxed, so it can access system resources. To do this, the code is not compiled to \acrshort{Wasm} but is instead part of the native runtime binary. This code is platform-dependent and must ensure the exposed \acrshort{API} works as similar as possible on each supported platform.
 
-\paragraph{LibUSB} To help the WASI USB runtime implementation having similar behavior on different platforms, LibUSB is used. LibUSB is a lightweight wrapper around native USB APIs, but abstracts them to a universal interface. By using LibUSB, the runtime implementation can be written against the LibUSB API instead of the need to provide separate implementations for each platform.
+\paragraph{libusb} To help the \acrshort{WASI} \acrshort{USB} runtime implementation having similar behavior on different platforms, libusb is used. libusb is a lightweight wrapper around native USB APIs \cite{LibUSB}, but abstracts them to a universal interface. By using libusb, the runtime implementation can be written against the libusb API instead of the need to provide separate implementations for each platform.
 
-\paragraph{Operating System USB API} Finally, LibUSB will call the native LibUSB APIs. These are provided by the Operating System kernel.
+\paragraph{Operating System USB API} Finally, libusb will call the native libusb APIs. These are provided by the Operating System kernel.
 
 \section{USB Proposal}
 \label{section:usb_proposal}
 The \texttt{wasi-usb} repository \cite{wasi_usb} contains the contents of the proposal to standardize the USB interface. The proposal contains a draft of the \acrshort{WIT} interface of the USB API. This section will highlight the important parts of the API.
 
 An important note is that in this chapter, `WIT interface' and `interface' will both be used, but have a different meaning.
-WIT interface refers to the whole WIT file.
-A WIT file itself also contains interfaces, which are also discussed here as interfaces. An interface can be thought of as an instance in the WebAssembly Component Model, for example a unit of functionality imported from the host or implemented by a component for consumption on a host. All functions and types belong to an interface \footnote{https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md\#wit-interfaces}.
+\acrshort{WIT} interface refers to the whole WIT file.
+A WIT file itself also contains interfaces, which are also discussed here as interfaces. An interface can be thought of as an instance in the WebAssembly Component Model, for example a unit of functionality imported from the host or implemented by a component for consumption on a host. All functions and types belong to an interface \cite{wit_interfaces}.
 
 \paragraph{\texttt{imports} World}
-The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoint of the interface. It imports 4 interfaces: \texttt{types}, \texttt{descriptors}, \texttt{events} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface. The world will also export these interfaces, making them available for components that use the \texttt{imports} world.\\
+The \texttt{imports} world in code snippet \ref{code:world} is the main entry point of the interface. It imports 4 interfaces: \texttt{types}, \texttt{descriptors}, \texttt{events} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface. The world will also export these interfaces, making them available for components that use the \texttt{imports} world.\\
 
 \begin{code}
 \lstinputlisting[breaklines, language=wit]{WIT/wit/world.wit}
@@ -117,9 +117,9 @@ The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoi
 \end{code}
 
 \paragraph{\texttt{usb} interface}
-The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device- handle}. Some details of the interface are omitted for brevity. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other three methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive API, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
+The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device- handle}. Some details of the interface are omitted for brevity. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other three methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive \acrshort{API}, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
 
-The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types (see \ref{section:transfer_types}): \texttt{read-interrupt}, \texttt{write-interrupt}, etc. Most functions in \texttt{device-handle} are closely related to similar LibUSB functions \cite{libusb_docs}. \\
+The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types (see \ref{section:transfer_types}): \texttt{read-interrupt}, \texttt{write-interrupt}, etc. Most functions in \texttt{device-handle} are closely related to similar libusb functions \cite{libusb_docs}. \\
 
 \begin{code}
 \begin{lstlisting}[breaklines, language=wit, tabsize=2]

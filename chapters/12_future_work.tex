@@ -1,9 +1,9 @@
 \chapter{Future Work}
-Research done for this thesis has laid the groundwork for building a \acrshort{WASI} \acrshort{USB} \acrshort{API}. However, the proposal is still at phase 1 and has a long way to go before it can become stable. Further work will need to happen on testing, providing multiple runtime implementations, creating fully functional programs that utilise the \acrshort{API} and gaining further community feedback.
+Research done for this thesis has laid the groundwork for building a \acrshort{WASI} \acrshort{USB} \acrshort{API}. However, the proposal is still at phase 1 and has a long way to go before it can become stable. Further work will need to happen on testing, providing multiple runtime implementations, creating fully functional programs that utilize the \acrshort{API} and gaining further community feedback.
 
 Also, the \acrshort{API} currently has some shortcomings that will need to be addressed in the future:
 
 \begin{itemize}
 \item The proposal currently ignores language support, but \acrshort{USB} devices can provide certain data, like device names, in multiple languages.
-\item Windows Hotplug support is currently missing, making the \texttt{events} interface of the proposal currently unavailable for Windows. As discussed in Section \ref{section:platform_limitations} this could be solved soon.
+\item Windows hotplug support is currently missing, making the \texttt{events} interface of the proposal currently unavailable for Windows. As discussed in Section \ref{section:platform_limitations} this could be solved soon.
 \end{itemize}
