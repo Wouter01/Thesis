@@ -3,7 +3,7 @@
 \section{Standardization}
 The goal of this master's thesis is to extend the WASI standard with a new USB API. In order to do this, the API must go through a standardization process. This way, a consensus can be made about how the API should work, which platforms it will work on, and what its scope is. When gone through the proposal, one universal API can be offered that is supported by all runtimes which are WASI-compliant.
 
-In order for the USB API to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the API. Throughout the standardization process, the proposal will go through 5 stages:
+In order for the USB API to take part in this standardization process, a proposal must be created. This proposal contains all ideas and information required to create an implementation for the API. Throughout the standardization process, the proposal will go through 5 phases \cite{proposal_phases}:
 
 \paragraph{Phase 0 (Pre-Proposal)}
 When there is enough interest in a proposal and the idea seems viable, the proposal gets discussed in an online WASI meeting. The person who will create the proposal explains the idea, what it would solve, and how it can and cannot be used. This is often also the first moment to get feedback from the community. Each attendee of the meeting casts a vote about the idea. If the majority of the people approve, the idea can move to Phase 1, and a proposal can be created. Champions (people that will create the proposal) get assigned to the proposal.
@@ -58,6 +58,46 @@ Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened dur
 	\caption{Timeline of events related to the USB proposal in the WASI repository.}
 	\label{tab:wasi_usb_proposal}
 \end{table}
+\newpage
+\section{Architecture}
+
+This section briefly explains how the different parts of the \acrshort{API} work together. A visualisation of the parts can be seen in Figure \ref{image:api_areas}.
+
+
+\begin{figure}[!h]
+\centering
+\begin{tikzpicture}
+	[mynode/.style = {rectangle, draw, align=center, 
+			inner xsep=6mm, inner ysep=3mm},
+	-latex,     
+	]
+
+	% nodes
+	\node[mynode] (inner) {Guest (Wasm Module)};
+	\node[mynode,  left=15mm of inner.west] (wasiusb) {WASI USB};
+	\node[label={}, above=10mm of inner.west] (title) {Wasm Runtime};
+
+	\node[fit={(inner) (wasiusb) (title)}, draw] (outer) {};
+	
+	\node[mynode, below=10mm of wasiusb.south] (libusb) {LibUSB};
+	\node[mynode, right=10mm of libusb.east] (nativeusb) {Operating System USB API};
+
+	% connections
+	\draw [<->, very thick] (wasiusb.east) to node[midway, above] {WIT} (inner.west);
+	\draw [<->, very thick] (wasiusb.south) to (libusb.north);
+	\draw [<->, very thick] (libusb.east) to (nativeusb.west);
+\end{tikzpicture}
+\caption{Internals of the WASI USB API. The arrows represent communication between the different areas.}
+\label{image:api_areas}
+\end{figure}
+
+\paragraph{Guest} This is a Wasm module that is created by a user of the API. It contains code that utilizes the API to communicate with devices. The guest module is sandboxed in the Wasm runtime, meaning that it cannot access any system resources. By utilizing the WASI APIs, such as the WASI USB API, it can get access to system resources. It can communicate with the runtime implementation through the \acrshort{WIT} interface.
+
+\paragraph{WASI USB} This is the host implementation of the WASI USB API. It acts as a bridge between native USB APIs and Wasm modules. This piece is part of the Wasm Runtime, but is not sandboxed, so it can access system resources. To do this, the code is not compiled to Wasm but is instead part of the native runtime binary. This code is platform-dependent and must ensure the exposed API works as similar as possible on each supported platform.
+
+\paragraph{LibUSB} To help the WASI USB runtime implementation having similar behavior on different platforms, LibUSB is used. LibUSB is a lightweight wrapper around native USB APIs, but abstracts them to a universal interface. By using LibUSB, the runtime implementation can be written against the LibUSB API instead of the need to provide separate implementations for each platform.
+
+\paragraph{Operating System USB API} Finally, LibUSB will call the native LibUSB APIs. These are provided by the Operating System kernel.
 
 \section{USB Proposal}
 \label{section:usb_proposal}
@@ -77,9 +117,9 @@ The \texttt{imports} world in code snippet \ref{code:world} is the main entrypoi
 \end{code}
 
 \paragraph{\texttt{usb} interface}
-The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device- handle}. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other 3 methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive API, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
+The \texttt{usb} interface seen in code snippet \ref{code:usb_interface} contains two resources: \texttt{usb-device} and \texttt{device- handle}. Some details of the interface are omitted for brevity. The \texttt{usb-device} resource contains a static function \texttt{enumerate}, with which all available USB devices can be retrieved. These will be returned as instances of \texttt{usb-device}. The other 3 methods can be used on one of these instances. The \texttt{device-descriptor} and \texttt{configurations} functions will both return extra information about a device and are always available. That is, they do not need to have exclusive access to these devices to obtain that information. The \texttt{open} function is different in this regard. This function will establish a context with which you can communicate with the device. One important aspect is that opening a device can fail due to various reasons. For example, some operating systems might deny opening a device if the executable does not have enough permissions. These permissions are handled at a \acrshort{Wasm} runtime level, and are not specific to \acrshort{Wasm} modules. To create a robust and intuitive API, functions that require an `open' device are scoped to the \texttt{device-handle} resource, which can only be obtained if a device can be opened successfully.
 
-The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types (see \ref{section:transfer_types}): \texttt{read-interrupt}, \texttt{write-interrupt}, etc. All functions in \texttt{device-handle} are closely related to similar LibUSB functions \cite{libusb_docs}. \\
+The \texttt{device-handle} resource will contain all the functions which require communicating with a device. For example, you are able to fetch the active configuration of a device. Functions exist to read and write using the four transfer types (see \ref{section:transfer_types}): \texttt{read-interrupt}, \texttt{write-interrupt}, etc. Most functions in \texttt{device-handle} are closely related to similar LibUSB functions \cite{libusb_docs}. \\
 
 \begin{code}
 \begin{lstlisting}[breaklines, language=wit, tabsize=2]
@@ -174,13 +214,13 @@ One of the strenghts of \acrshort{WASI} is the capability-based security mechani
 
 The \acrshort{USB} proposal aims to add a similar security model for accessing USB devices. This idea can be applied at various levels:
 \begin{itemize}
-\item Device-level
-\item Configuration-level
-\item Interface-level
-\item Endpoint-level
+\item Device-level: Only allow devices with specified vendor / product ID pairs.
+\item Configuration-level: Only allow devices with certain configuration types. For example, only allow self-powered devices.
+\item Interface-level: Only allow interfaces with certain kinds of properties. For example, only allow interfaces that have the Mass Storage device class code.
+\item Endpoint-level: Only allow endpoints with certain kinds of properties. For example, only allow endpoints with an \textit{IN} direction, limiting the guest to only receive data.
 \end{itemize}
 
-The current proposal draft only applies this security model at the \textbf{device-level}. This option is the most obvious one, and is similar to the way WebUSB protects devices \cite{webusb_security}. Applying the security model to the other 3 levels is possible, but it is not known if this would provide any benefits, as no use cases were found were these were deemed useful. Therefore, these levels have been left out of the security model.
+The current proposal draft only applies this security model at the \textbf{device-level}. This option is the most obvious one, and is similar to the way WebUSB protects devices \cite{webusb_security}. Applying the security model to the other 3 levels is possible, but it is not known yet if this would provide any benefits. Therefore, these levels have been left out of the security model for now. Community feedback will be essential to determine if these options are useful.
 
 \subsection{Implementation Considerations}
 When implementing the security model at a device-level, the \acrshort{Wasm} runtime should take following measures:

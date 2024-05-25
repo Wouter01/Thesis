@@ -56,15 +56,13 @@ Details of each descriptor can be found in the appendix \ref{appendix:descriptor
 
 \subsubsection{Device Descriptors}
 
-Each USB device has a device descriptor, which contains general information about the device, such as what name is has, which protocols it supports, its serial number, how much configurations it has, and more. This descriptor is essentially the entrypoint to do anything with the device.
+Each USB device has a device descriptor which contains general information about the device, such as its device and vendor ID, which protocols it supports, its serial number, how much configurations it has, and more. This descriptor is essential, as it allows a program to find specific devices or kind of devices, so the right device can be chosen to communicate to.
 
 \subsubsection{Configuration Descriptors}
 
-The configuration descriptor provides information about a configuration of a USB device. A devices can have multiple configurations, each defining different combinations of interfaces and endpoints that the device supports.
+The configuration descriptor provides information about a configuration of a USB device. A configuration describes the power usage of a device. For example, a device can have a configuration where it is self powered, and a configuration where it requires extra power from the host. Each configuration can have different combinations of interfaces and endpoints.
 
-Each configuration descriptor contains a standardized set of fields, such as how many interfaces it contains (and the descriptors for these interfaces), or the power consumption of the configuration. The host device can also determine if the device is self-powered or bus-powered based off the configuration descriptor.
-
-When a USB device is connected to a host, the host uses the configuration descriptor to determine which configuration to activate and how to communicate with the device.
+When a USB device is connected to a host, the host will examine the configuration descriptors and select the one required by the program.
 
 \subsubsection{Interface Descriptors}
 

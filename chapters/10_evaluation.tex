@@ -1,12 +1,81 @@
 \chapter{Evaluation}
 
+The \acrshort{API} has been evaluated in three ways. First, a functional evaluation was performed, checking if the \acrshort{API} behaves as expected. Next, a latency evaluation was done, measuring if there are any noticeable slowdowns while using the \acrshort{API} compared to native code. Finally, a memory evaluation was constructed, measuring the impact on memory usage of running the code in \acrshort{Wasm} compared to native.
+
+The code of all the benchmarks can be found in the \textit{USB\_WASI} \cite{usb_wasi_impl} repository.
+
+\subsection{Test Setup}
+
+This section will go briefly over the test setups used to perform the evaluation.
+Table \ref{table:test_hardware} shows the hardware configurations of the devices used to do these tests. Table \ref{table:software_environment} shows the software environment in which the tests were performed.
+
+\begin{table}[H]
+\[
+\begin{array}{|l|l|l|l|l|l|}
+\hline
+\textbf{Device} & \textbf{Name} & \textbf{SoC/Microcontroller} & \textbf{RAM} & \textbf{Storage} & \textbf{USB Version} \\
+\hline
+\text{Host} & \text{Apple Macbook Air (2020)} & \text{Apple M1 (8-core CPU, 7-core GPU)} & \text{8GB} & \text{256GB SSD} & \text{4.0} \\
+
+\hline
+\text{Guest} & \text{Arduino Micro} & \text{Atmel ATmega32U4} & \text{2,5KB} & \text{32KB Flash} & \text{2.1} \\
+
+\hline
+\text{Guest} & \text{Samsung T5 Portable SSD} & \text{Unknown} & \text{Unknown} & \text{500GB SSD} & \text{3.1 Gen 2} \\
+\hline
+\text{Guest} & \text{Google Stadia Game Controller} & \text{NXP MIMXRT1061} & \text{1024KB} & \text{16MB} & \text{2.0} \\
+\hline
+\end{array}
+\]
+\caption{The hardware used for testing the performance of the API.}
+\label{table:test_hardware}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Operating System} & macOS 14.5 \\ \hline
+\textbf{Wasm Runtime} & Wasmtime 20.0.2 \\ \hline
+\textbf{USB Library} & libusb 1.0.27, Rusb 0.9.4 \\ \hline
+\textbf{Rust Version} & rustc 1.78.0 \\ \hline
+\end{tabular}
+\caption{Software Environment.}
+\label{table:software_environment}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth, angle=90]{images/stadia_setup.png}
+  \caption{Setup for testing with the Google Stadia controller. The controller is directly connected to the host device with an USB 2.0 C to C cable.}
+  \label{fig:stadia_setup}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth, angle=90]{images/arduino_setup.png}
+  \caption{Setup for testing with the Arduino board. The Arduino is connected via a USB 3.0 A to C adapter, and a USB 2.0 B to A cable.}
+  \label{fig:arduino_setup}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth]{images/t5_setup.png}
+  \caption{Setup for testing the Samsung T5 SSD. The SSD is directly connected to the host device with a USB 3.1 Gen 1 (5Gbps) C to C cable.}
+  \label{fig:samsung_setup}
+\end{figure}
+
+
+
+
 \section{Functional Evaluation}
 \label{section:functional_evaluation}
 When developing the API, it is useful to already have guest code utilizing the API to quickly iterate. The following proof of concept is one of the guest programs created to test the API. It touches on all the parts of the API: getting device updates and receiving and sending data through the USB interface. As it is a proof of concept, it does not test the performance of the API.
 
 The general idea of the program is to control a game controller. The program is started and observes the connected devices. Once a controller is connected that is recognized by the program, the program will connect to the controller. The state of all the controls of the device will be read, and input updates will be print out. To test sending data over the USB interface, the program will send commands to the controller to activate the rumble motors \footnote{Rumble motors are used to vibrate the controller}.
 
-\subsection{Test Setup}
+\subsubsection{Test Methodology}
 The code will call the event-related API to start watching for USB devices. It will get events when devices are connected or disconnected. As WASI does not support asynchronous code yet \cite{wasi_roadmap}, a form of polling is used to get device connection events. The guest code uses a single-threaded asynchronous runtime, which will often yield to get new device connection events. This way, a multi-threaded real app can be simulated.
 
 \begin{enumerate}
@@ -47,47 +116,9 @@ r2: 172
 \label{code:wasi_controller_sample_output}
 \end{code}
 
-\subsection{Results}
+\subsubsection{Results}
 This program has been tested with a Google Stadia controller. When pressing one or multiple buttons, the correct state is printed out. When pressing one or both of the shoulder buttons, the controller starts to vibrate.
 
-
-
-\section{Hardware \& Software Configuration}
-
-Tests were performed to evaluate the performance of the API. In these tests, test programs are created which run in WASI, as a native program or, when available, on Wasm in the browser. Table \ref{table:test_hardware} shows the hardware configurations of the devices used to do these tests. Table \ref{table:software_environment} shows the software environment in which the tests were performed.
-
-\begin{table}[H]
-\[
-\begin{array}{|l|l|l|l|l|l|}
-\hline
-\textbf{Device} & \textbf{Name} & \textbf{SoC/Microcontroller} & \textbf{RAM} & \textbf{Storage} & \textbf{USB Version} \\
-\hline
-\text{Host} & \text{Apple Macbook Air (2020)} & \text{Apple M1 (8-core CPU, 7-core GPU)} & \text{8GB} & \text{256GB SSD} & \text{4.0} \\
-
-\hline
-\text{Guest} & \text{Arduino Micro} & \text{Atmel ATmega32U4} & \text{2,5KB} & \text{32KB Flash} & \text{2.1} \\
-
-\hline
-\text{Guest} & \text{Samsung T5 Portable SSD} & \text{} & \text{} & \text{500GB SSD} & \text{3.1 Gen 2} \\
-\hline
-\end{array}
-\]
-\caption{The hardware used for testing the performance of the API.}
-\label{table:test_hardware}
-\end{table}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Operating System} & macOS 14.5 \\ \hline
-\textbf{Wasm Runtime} & Wasmtime 20.0.2 \\ \hline
-\textbf{USB Library} & libusb 1.0.27, Rusb 0.9.4 \\ \hline
-\textbf{Rust Version} & rustc 1.78.0 \\ \hline
-\end{tabular}
-\caption{Software Environment.}
-\label{table:software_environment}
-\end{table}
 
 
 \section{Latency Evaluation}
@@ -96,7 +127,7 @@ One of the advantages of \acrshort{Wasm} should be that it offers near-native sp
 
 \subsection{Receiving data from Arduino}
 
-\subsubsection{Test Setup}
+\subsubsection{Test Methodology}
 A program has been written with LibUSB (Native) and WASI USB (Wasm). Each program will do the following steps:
 
 \begin{enumerate}
@@ -189,7 +220,7 @@ However, it is possible that the delay of the USB protocol is smaller on devices
 
 In order to confirm that WASI does not add noticeable latency, another benchmark is performed, which reads the contents of an USB Mass Storage device. The advantage of this benchmark compared to the Arduino benchmark is that it better represents real-world usage, instead of being a synthetic benchmark.
 
-\subsubsection{Test Setup}
+\subsubsection{Test Methodology}
 A program has been written which enumerates the file tree of a USB device and reads the contents of each file in the file tree. A Samsung T5 External SSD is used to perform these tests. The device is connected with a cable that supports a transfer speed up to 5Gb/s and is formatted with the \acrshort{MBR} partition map and the \acrshort{exFAT} file system. There are 10 files stored on the device, most of which are a few KBs in size. One file has a size of 679MB. In total, 680MB is stored on the device.
 
 The program contains a working but incomplete implementation for the \acrshort{USB} Mass Storage Bulk-Only transport specification. Further information about the specification and implementation details can be found in the specification documents \cite{usb_specification_boot} \cite{usb_specification_bulk}. The code exposes an interface where one can \textit{seek} to a specific address and \textit{read} the contents from there up until a specified length.
@@ -303,7 +334,7 @@ In contrast to standard \acrshort{Wasm} modules, \acrshort{WASI} components have
 \label{section:reading_files_memory}
 The same test setup as \ref{section:mass_storage_latency} will be used to benchmark memory usage. Section \ref{section:mass_storage_latency} already discussed a performance issue caused by memory allocation. As this section is about the \textit{amount} of memory used, and not about the \textit{performance} of utilizing it, this problem won't be further discussed here.
 
-\subsubsection{Test Setup}
+\subsubsection{Test Methodology}
 \label{section:reading_files_memory_test_setup}
 Some changes are made to the test setup described in \ref{section:mass_storage_latency}. Instead of logging the duration of reading the file tree, the amount of memory will be logged. Also, instead of running the benchmark 1000 times, it is now run once.
 
