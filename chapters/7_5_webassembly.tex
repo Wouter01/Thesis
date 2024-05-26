@@ -77,6 +77,8 @@ world http-proxy {
 
 This example file uses the world \texttt{http-proxy}. It imports the \texttt{outgoing-handler} interface. This interface is declared in the \texttt{wasi:http} package and is imported from there. The world will also export the \texttt{incoming-handler} interface. This means that other components can interact with this component by using the types and functions in the \texttt{incoming-handler} interface.
 
+\newpage
+
 \paragraph{Interface}
 An interface is a group of types and functions. An interface can represent a certain feature in a library or semantically group a set of elements together. Interfaces declared in other packages can also be used in an interface. This can be done by using the \texttt{use} syntax:
 \begin{lstlisting}[language=wit]
@@ -162,6 +164,8 @@ In the example below, the resource \texttt{file-handle} contains 5 functions, wh
 \begin{lstlisting}[language=wit]
 equiv-to-constructor: static func(file: file) -> file-handle
 \end{lstlisting}
+
+\newpage
 
 \item instance functions: \texttt{read}, \texttt{seek} and \texttt{write} are instance functions and are called on an already-existing instance which conforms to the resource. An instance function can be desugared into
 \begin{lstlisting}[language=wit]

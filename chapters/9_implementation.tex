@@ -147,6 +147,8 @@ This macro will generate Rust types and traits that represent their \acrshort{WI
 
 The \texttt{with} map shown in code snippet \ref{code:wit_bindgen} is used to point the \texttt{bindgen} tool to the Rust types we want to use to represent the \texttt{usb-device} and \texttt{device-handle} resources. The \texttt{bindgen} macro will use these types in the generated traits.\\
 
+\newpage
+
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}
 pub mod bindings {
@@ -173,6 +175,8 @@ Code snippet \ref{code:conforming_example} shows an example usage of the generat
 \end{itemize}
 
 \texttt{DeviceHandle} has a handle that is used to call libusb functions. In this example, the \texttt{claim\_interface} function will call the equivalent libusb function and return its result.\\
+
+\newpage
 
 \begin{code}
 \begin{minted}[tabsize=4, breaklines]{rust}

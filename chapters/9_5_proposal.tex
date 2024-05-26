@@ -41,6 +41,8 @@ No proposal has reached phase 4 yet, so the requirements of phase 4 \& 5 is not 
 
 A full overview of phase requirements can be found \href{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}{here} \footnote{https://github.com/WebAssembly/meetings/blob/main/process/phases.md}.
 
+\newpage
+
 \section{Timeline}
 Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened during the year regarding the proposal. At the time of writing, the \acrshort{WASI} \acrshort{USB} proposal is in Phase 1.
 
@@ -58,7 +60,8 @@ Table \ref{tab:wasi_usb_proposal} shows the timeline of events that happened dur
 	\caption{Timeline of events related to the USB proposal in the WASI repository.}
 	\label{tab:wasi_usb_proposal}
 \end{table}
-\newpage
+
+
 \section{Architecture}
 
 This section briefly explains how the different parts of the \acrshort{API} work together. A visualisation of the parts can be seen in Figure \ref{image:api_areas}.
@@ -110,6 +113,8 @@ A WIT file itself also contains interfaces, which are also discussed here as int
 \paragraph{\texttt{imports} World}
 The \texttt{imports} world in code snippet \ref{code:world} is the main entry point of the interface. It imports 4 interfaces: \texttt{types}, \texttt{descriptors}, \texttt{events} and \texttt{usb}. These are separate files with different parts of the WIT interface. The world imports them so they are included in the WIT interface. The world will also export these interfaces, making them available for components that use the \texttt{imports} world.\\
 
+\newpage
+
 \begin{code}
 \lstinputlisting[breaklines, language=wit]{WIT/wit/world.wit}
 \caption{\texttt{imports} world.}
@@ -150,8 +155,6 @@ package component:usb@0.2.0;
 
 		select-configuration: func(configuration: u8) -> result<_, usb-error>;
 
-		// **Interfaces**
-
 		// Claim an interface.
 		// Claiming an interface can fail. For example, the operating system might not allow claiming the interface.
 		claim-interface: func(%interface: u8) -> result<_, usb-error>;
@@ -161,8 +164,6 @@ package component:usb@0.2.0;
 
 		// Select an alternate interface.
 		select-alternate-interface: func(%interface: u8, setting: u8) -> result<_, usb-error>;
-
-		// **Reading & Writing**
 
 		read-interrupt: func(...) -> ...;
 		write-interrupt: func(...) -> ...;
@@ -207,6 +208,8 @@ package component:usb@0.2.0;
 \caption{\texttt{events} interface.}
 \label{code:events_interface}
 \end{code}
+
+\newpage
 
 \section{Capability-based security}
 \label{section:capability_based_security}
